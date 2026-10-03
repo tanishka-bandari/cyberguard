@@ -33,15 +33,22 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
-     configuration.setAllowedOrigins(
-        List.of(
-                "http://localhost:5173",
-                "https://cyberguard-alx7cdhq4-cyber-guard6.vercel.app"
-        )
-);
+
+        configuration.setAllowedOrigins(
+                List.of(
+                        "http://localhost:5173",
+                        "https://cyberguard-alx7cdhq4-cyber-guard6.vercel.app"
+                )
+        );
 
         configuration.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS"
+                )
         );
 
         configuration.setAllowedHeaders(
@@ -76,29 +83,47 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> {
+
+                    // Public authentication endpoints
                     auth.requestMatchers(
-                            "/api/auth/register",
-                            "/api/auth/login"
+                            "/api/auth/**"
                     ).permitAll();
 
+                    // Allow CORS preflight requests
+                    auth.requestMatchers(
+                            HttpMethod.OPTIONS,
+                            "/**"
+                    ).permitAll();
+
+                    // Create incident - logged-in users only
                     auth.requestMatchers(
                             HttpMethod.POST,
                             "/api/incidents"
                     ).authenticated();
 
+                    // Update incident status - Analyst/Admin only
                     auth.requestMatchers(
                             HttpMethod.PUT,
                             "/api/incidents/*/status"
-                    ).hasAnyRole("ANALYST", "ADMIN");
+                    ).hasAnyRole(
+                            "ANALYST",
+                            "ADMIN"
+                    );
 
+                    // Audit logs - Analyst/Admin only
                     auth.requestMatchers(
                             "/api/audit-logs/**"
-                    ).hasAnyRole("ANALYST", "ADMIN");
+                    ).hasAnyRole(
+                            "ANALYST",
+                            "ADMIN"
+                    );
 
+                    // Dashboard - logged-in users only
                     auth.requestMatchers(
                             "/api/dashboard"
                     ).authenticated();
 
+                    // Everything else requires authentication
                     auth.anyRequest().authenticated();
                 })
 
@@ -109,5 +134,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
 }
