@@ -27,8 +27,7 @@ uploads/
 .env
 *.env
 
-# Local Spring configuration
-src/main/resources/application.properties
+
 
 # OS files
 .DS_Store
