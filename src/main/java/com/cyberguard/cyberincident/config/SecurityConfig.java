@@ -33,10 +33,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
-        );
+     configuration.setAllowedOrigins(
+        List.of(
+                "http://localhost:5173",
+                "https://cyberguard-alx7cdhq4-cyber-guard6.vercel.app"
+        )
+);
 
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
@@ -107,4 +109,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }
