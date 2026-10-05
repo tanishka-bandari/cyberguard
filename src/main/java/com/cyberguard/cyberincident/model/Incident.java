@@ -46,6 +46,14 @@ public class Incident {
     @JoinColumn(name = "reported_by", nullable = false)
     private User reportedBy;
 
+    /*
+     * Employee / Analyst assigned to investigate this incident.
+     * This can be null when the incident is not yet assigned.
+     */
+    @ManyToOne
+    @JoinColumn(name = "assigned_to")
+    private User assignedTo;
+
     @Column(nullable = false)
     private LocalDateTime reportedAt;
 
@@ -116,6 +124,14 @@ public class Incident {
         this.reportedBy = reportedBy;
     }
 
+    public User getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(User assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
     public LocalDateTime getReportedAt() {
         return reportedAt;
     }
@@ -124,4 +140,3 @@ public class Incident {
         this.reportedAt = reportedAt;
     }
 }
-

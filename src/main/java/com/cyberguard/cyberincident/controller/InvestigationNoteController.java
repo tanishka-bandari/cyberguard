@@ -3,6 +3,7 @@ package com.cyberguard.cyberincident.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +23,7 @@ public class InvestigationNoteController {
 
     public InvestigationNoteController(
             InvestigationNoteService noteService) {
+
         this.noteService = noteService;
     }
 
@@ -29,16 +31,18 @@ public class InvestigationNoteController {
     public ResponseEntity<InvestigationNoteResponseDto> addNote(
             @PathVariable Long incidentId,
             @RequestParam String note,
-            @RequestParam String email) {
+            Authentication authentication) {
 
         InvestigationNote investigationNote =
                 noteService.addNote(
                         incidentId,
                         note,
-                        email
+                        authentication
                 );
 
-        return ResponseEntity.ok(toDto(investigationNote));
+        return ResponseEntity.ok(
+                toDto(investigationNote)
+        );
     }
 
     @GetMapping("/{incidentId}/notes")

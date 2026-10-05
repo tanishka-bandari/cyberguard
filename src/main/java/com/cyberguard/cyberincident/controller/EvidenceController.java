@@ -3,6 +3,7 @@ package com.cyberguard.cyberincident.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,12 +30,12 @@ public class EvidenceController {
     public ResponseEntity<EvidenceResponseDto> uploadEvidence(
             @PathVariable Long incidentId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam String email) throws Exception {
+            Authentication authentication) throws Exception {
 
         Evidence evidence = evidenceService.uploadEvidence(
                 incidentId,
                 file,
-                email
+                authentication
         );
 
         return ResponseEntity.ok(toDto(evidence));

@@ -1,5 +1,7 @@
 package com.cyberguard.cyberincident.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,8 +14,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -37,7 +37,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173",
-                        "https://cyberguard-alx7cdhq4-cyber-guard6.vercel.app"
+                        "https://cyberguard-alx7cdhq-cyber-guard6.vercel.app"
                 )
         );
 
@@ -66,14 +66,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
 
                 .cors(cors ->
-                        cors.configurationSource(corsConfigurationSource())
+                        cors.configurationSource(
+                                corsConfigurationSource()
+                        )
                 )
 
                 .sessionManagement(session ->
@@ -84,33 +86,130 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> {
 
-                    // Public authentication endpoints
+                    // =====================================================
+                    // PUBLIC AUTHENTICATION
+                    // =====================================================
+
                     auth.requestMatchers(
                             "/api/auth/**"
                     ).permitAll();
 
-                    // Allow CORS preflight requests
+                    // CORS preflight
                     auth.requestMatchers(
                             HttpMethod.OPTIONS,
                             "/**"
                     ).permitAll();
 
-                    // Create incident - logged-in users only
+
+                    // =====================================================
+                    // INCIDENTS
+                    // =====================================================
+
+                    // Create incident - logged-in users
                     auth.requestMatchers(
                             HttpMethod.POST,
                             "/api/incidents"
                     ).authenticated();
 
-                    // Update incident status - Analyst/Admin only
+                    // View incidents - logged-in users
                     auth.requestMatchers(
-                            HttpMethod.PUT,
-                            "/api/incidents/*/status"
+                            HttpMethod.GET,
+                            "/api/incidents"
+                    ).authenticated();
+
+                    // View specific user's incidents
+                    // Only ANALYST and ADMIN
+                    auth.requestMatchers(
+                            HttpMethod.GET,
+                            "/api/incidents/user/**"
                     ).hasAnyRole(
                             "ANALYST",
                             "ADMIN"
                     );
 
-                    // Audit logs - Analyst/Admin only
+
+                    // =====================================================
+                    // INCIDENT STATUS
+                    // =====================================================
+
+                    // USER can update own incident.
+                    // Ownership is checked inside IncidentService.
+                    // ANALYST/ADMIN can update incidents.
+                    auth.requestMatchers(
+                            HttpMethod.PUT,
+                            "/api/incidents/*/status"
+                    ).authenticated();
+
+
+                    // =====================================================
+                    // INCIDENT ASSIGNMENT
+                    // =====================================================
+
+                    // Only ADMIN can assign an incident
+                    auth.requestMatchers(
+                            HttpMethod.PUT,
+                            "/api/incidents/*/assign"
+                    ).hasRole("ADMIN");
+
+                    // Only ADMIN can remove an assignment
+                    auth.requestMatchers(
+                            HttpMethod.PUT,
+                            "/api/incidents/*/unassign"
+                    ).hasRole("ADMIN");
+
+
+                    // =====================================================
+                    // DELETE INCIDENT
+                    // =====================================================
+
+                    // ADMIN only
+                    auth.requestMatchers(
+                            HttpMethod.DELETE,
+                            "/api/incidents/*"
+                    ).hasRole("ADMIN");
+
+
+                    // =====================================================
+                    // INVESTIGATION NOTES
+                    // =====================================================
+
+                    // Only ANALYST/ADMIN can add investigation notes
+                    auth.requestMatchers(
+                            HttpMethod.POST,
+                            "/api/incidents/*/notes"
+                    ).hasAnyRole(
+                            "ANALYST",
+                            "ADMIN"
+                    );
+
+
+                    // =====================================================
+                    // EVIDENCE
+                    // =====================================================
+
+                    // Only ANALYST/ADMIN can upload evidence
+                    auth.requestMatchers(
+                            HttpMethod.POST,
+                            "/api/incidents/*/evidence"
+                    ).hasAnyRole(
+                            "ANALYST",
+                            "ADMIN"
+                    );
+
+
+                    // =====================================================
+                    // DASHBOARD
+                    // =====================================================
+
+                    auth.requestMatchers(
+                            "/api/dashboard"
+                    ).authenticated();
+
+
+                    // =====================================================
+                    // AUDIT LOGS
+                    // =====================================================
+
                     auth.requestMatchers(
                             "/api/audit-logs/**"
                     ).hasAnyRole(
@@ -118,12 +217,26 @@ public class SecurityConfig {
                             "ADMIN"
                     );
 
-                    // Dashboard - logged-in users only
-                    auth.requestMatchers(
-                            "/api/dashboard"
-                    ).authenticated();
+// Audit logs
+auth.requestMatchers(
+        "/api/audit-logs/**"
+).hasAnyRole(
+        "ANALYST",
+        "ADMIN"
+);
 
-                    // Everything else requires authentication
+// Staff users for incident assignment
+auth.requestMatchers(
+        HttpMethod.GET,
+        "/api/users/staff"
+).hasRole("ADMIN");
+
+// Everything else requires login
+auth.anyRequest().authenticated();
+                    // =====================================================
+                    // EVERYTHING ELSE
+                    // =====================================================
+
                     auth.anyRequest().authenticated();
                 })
 

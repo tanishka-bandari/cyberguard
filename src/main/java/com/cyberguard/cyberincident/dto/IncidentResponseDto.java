@@ -15,9 +15,15 @@ public class IncidentResponseDto {
     private Severity severity;
     private IncidentStatus status;
     private Integer riskScore;
+
     private Long reportedById;
     private String reportedByName;
     private String reportedByEmail;
+
+    private Long assignedToId;
+    private String assignedToName;
+    private String assignedToEmail;
+
     private LocalDateTime reportedAt;
 
     public IncidentResponseDto() {
@@ -34,6 +40,9 @@ public class IncidentResponseDto {
             Long reportedById,
             String reportedByName,
             String reportedByEmail,
+            Long assignedToId,
+            String assignedToName,
+            String assignedToEmail,
             LocalDateTime reportedAt) {
 
         this.id = id;
@@ -43,9 +52,15 @@ public class IncidentResponseDto {
         this.severity = severity;
         this.status = status;
         this.riskScore = riskScore;
+
         this.reportedById = reportedById;
         this.reportedByName = reportedByName;
         this.reportedByEmail = reportedByEmail;
+
+        this.assignedToId = assignedToId;
+        this.assignedToName = assignedToName;
+        this.assignedToEmail = assignedToEmail;
+
         this.reportedAt = reportedAt;
     }
 
@@ -87,6 +102,18 @@ public class IncidentResponseDto {
 
     public String getReportedByEmail() {
         return reportedByEmail;
+    }
+
+    public Long getAssignedToId() {
+        return assignedToId;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public String getAssignedToEmail() {
+        return assignedToEmail;
     }
 
     public LocalDateTime getReportedAt() {

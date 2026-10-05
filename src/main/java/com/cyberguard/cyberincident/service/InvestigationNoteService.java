@@ -3,10 +3,12 @@ package com.cyberguard.cyberincident.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.cyberguard.cyberincident.model.Incident;
 import com.cyberguard.cyberincident.model.InvestigationNote;
+import com.cyberguard.cyberincident.model.Role;
 import com.cyberguard.cyberincident.model.User;
 import com.cyberguard.cyberincident.repository.IncidentRepository;
 import com.cyberguard.cyberincident.repository.InvestigationNoteRepository;
@@ -32,15 +34,38 @@ public class InvestigationNoteService {
     public InvestigationNote addNote(
             Long incidentId,
             String note,
-            String email) {
+            Authentication authentication) {
 
         Incident incident = incidentRepository.findById(incidentId)
                 .orElseThrow(() ->
                         new RuntimeException("Incident not found"));
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+        if (authentication == null
+                || authentication.getName() == null) {
+
+            throw new RuntimeException(
+                    "User is not authenticated");
+        }
+
+        User user = userRepository.findByEmail(
+                authentication.getName()
+        ).orElseThrow(() ->
+                new RuntimeException("User not found"));
+
+        // Only ANALYST and ADMIN can add investigation notes
+        if (user.getRole() != Role.ANALYST
+                && user.getRole() != Role.ADMIN) {
+
+            throw new RuntimeException(
+                    "Access denied. Only ANALYST or ADMIN can add investigation notes."
+            );
+        }
+
+        if (note == null || note.trim().isEmpty()) {
+
+            throw new RuntimeException(
+                    "Investigation note cannot be empty");
+        }
 
         InvestigationNote investigationNote =
                 new InvestigationNote();
@@ -48,14 +73,20 @@ public class InvestigationNoteService {
         investigationNote.setNote(note);
         investigationNote.setIncident(incident);
         investigationNote.setAddedBy(user);
-        investigationNote.setCreatedAt(LocalDateTime.now());
+        investigationNote.setCreatedAt(
+                LocalDateTime.now()
+        );
 
-        return noteRepository.save(investigationNote);
+        return noteRepository.save(
+                investigationNote
+        );
     }
 
     public List<InvestigationNote> getNotesByIncident(
             Long incidentId) {
 
-        return noteRepository.findByIncidentId(incidentId);
+        return noteRepository.findByIncidentId(
+                incidentId
+        );
     }
 }
