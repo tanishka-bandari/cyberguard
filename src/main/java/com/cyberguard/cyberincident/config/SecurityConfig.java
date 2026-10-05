@@ -20,7 +20,9 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
+
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -32,7 +34,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration configuration =
+                new CorsConfiguration();
 
         configuration.setAllowedOrigins(
                 List.of(
@@ -60,7 +63,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration(
+                "/**",
+                configuration
+        );
 
         return source;
     }
@@ -70,7 +76,9 @@ public class SecurityConfig {
             HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf ->
+                        csrf.disable()
+                )
 
                 .cors(cors ->
                         cors.configurationSource(
@@ -86,10 +94,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> {
 
-                    // =====================================================
-                    // PUBLIC AUTHENTICATION
-                    // =====================================================
-
+                    // Authentication endpoints
                     auth.requestMatchers(
                             "/api/auth/**"
                     ).permitAll();
@@ -100,25 +105,19 @@ public class SecurityConfig {
                             "/**"
                     ).permitAll();
 
-
-                    // =====================================================
-                    // INCIDENTS
-                    // =====================================================
-
-                    // Create incident - logged-in users
+                    // Incident creation
                     auth.requestMatchers(
                             HttpMethod.POST,
                             "/api/incidents"
                     ).authenticated();
 
-                    // View incidents - logged-in users
+                    // View incidents
                     auth.requestMatchers(
                             HttpMethod.GET,
                             "/api/incidents"
                     ).authenticated();
 
-                    // View specific user's incidents
-                    // Only ANALYST and ADMIN
+                    // View incidents reported by a specific user
                     auth.requestMatchers(
                             HttpMethod.GET,
                             "/api/incidents/user/**"
@@ -127,53 +126,31 @@ public class SecurityConfig {
                             "ADMIN"
                     );
 
-
-                    // =====================================================
-                    // INCIDENT STATUS
-                    // =====================================================
-
-                    // USER can update own incident.
-                    // Ownership is checked inside IncidentService.
-                    // ANALYST/ADMIN can update incidents.
+                    // Update incident status
                     auth.requestMatchers(
                             HttpMethod.PUT,
                             "/api/incidents/*/status"
                     ).authenticated();
 
-
-                    // =====================================================
-                    // INCIDENT ASSIGNMENT
-                    // =====================================================
-
-                    // Only ADMIN can assign an incident
+                    // Assign incident
                     auth.requestMatchers(
                             HttpMethod.PUT,
                             "/api/incidents/*/assign"
                     ).hasRole("ADMIN");
 
-                    // Only ADMIN can remove an assignment
+                    // Unassign incident
                     auth.requestMatchers(
                             HttpMethod.PUT,
                             "/api/incidents/*/unassign"
                     ).hasRole("ADMIN");
 
-
-                    // =====================================================
-                    // DELETE INCIDENT
-                    // =====================================================
-
-                    // ADMIN only
+                    // Delete incident
                     auth.requestMatchers(
                             HttpMethod.DELETE,
                             "/api/incidents/*"
                     ).hasRole("ADMIN");
 
-
-                    // =====================================================
-                    // INVESTIGATION NOTES
-                    // =====================================================
-
-                    // Only ANALYST/ADMIN can add investigation notes
+                    // Investigation notes
                     auth.requestMatchers(
                             HttpMethod.POST,
                             "/api/incidents/*/notes"
@@ -182,12 +159,7 @@ public class SecurityConfig {
                             "ADMIN"
                     );
 
-
-                    // =====================================================
-                    // EVIDENCE
-                    // =====================================================
-
-                    // Only ANALYST/ADMIN can upload evidence
+                    // Evidence upload
                     auth.requestMatchers(
                             HttpMethod.POST,
                             "/api/incidents/*/evidence"
@@ -196,20 +168,12 @@ public class SecurityConfig {
                             "ADMIN"
                     );
 
-
-                    // =====================================================
-                    // DASHBOARD
-                    // =====================================================
-
+                    // Dashboard
                     auth.requestMatchers(
                             "/api/dashboard"
                     ).authenticated();
 
-
-                    // =====================================================
-                    // AUDIT LOGS
-                    // =====================================================
-
+                    // Audit logs
                     auth.requestMatchers(
                             "/api/audit-logs/**"
                     ).hasAnyRole(
@@ -217,26 +181,14 @@ public class SecurityConfig {
                             "ADMIN"
                     );
 
-// Audit logs
-auth.requestMatchers(
-        "/api/audit-logs/**"
-).hasAnyRole(
-        "ANALYST",
-        "ADMIN"
-);
+                    // Staff users for assignment
+                    auth.requestMatchers(
+                            HttpMethod.GET,
+                            "/api/users/staff"
+                    ).hasRole("ADMIN");
 
-// Staff users for incident assignment
-auth.requestMatchers(
-        HttpMethod.GET,
-        "/api/users/staff"
-).hasRole("ADMIN");
-
-// Everything else requires login
-auth.anyRequest().authenticated();
-                    // =====================================================
-                    // EVERYTHING ELSE
-                    // =====================================================
-
+                    // IMPORTANT:
+                    // This is the ONLY anyRequest() in the configuration.
                     auth.anyRequest().authenticated();
                 })
 
