@@ -22,10 +22,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService,
-                                   UserRepository userRepository) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            UserRepository userRepository) {
+
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        String path = request.getServletPath();
+
+        // JWT is NOT required for authentication endpoints
+        return path.startsWith("/api/auth/");
     }
 
     @Override
@@ -37,7 +48,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // No JWT → continue normally
+        if (authHeader == null ||
+                !authHeader.startsWith("Bearer ")) {
+
             filterChain.doFilter(request, response);
             return;
         }
@@ -45,31 +59,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
+
             String email = jwtService.extractEmail(token);
 
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (email != null &&
+                    SecurityContextHolder
+                            .getContext()
+                            .getAuthentication() == null) {
 
-                User user = userRepository.findByEmail(email)
+                User user = userRepository
+                        .findByEmail(email)
                         .orElse(null);
 
                 if (user != null) {
 
-                    String role = "ROLE_" + user.getRole().name();
+                    String role =
+                            "ROLE_" + user.getRole().name();
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     user.getEmail(),
                                     null,
-                                    List.of(new SimpleGrantedAuthority(role))
+                                    List.of(
+                                            new SimpleGrantedAuthority(role)
+                                    )
                             );
 
-                    SecurityContextHolder.getContext()
+                    SecurityContextHolder
+                            .getContext()
                             .setAuthentication(authentication);
                 }
             }
 
         } catch (Exception e) {
-            // Invalid or expired token
+
+            // Invalid/expired JWT.
+            // Do not crash the request.
             SecurityContextHolder.clearContext();
         }
 

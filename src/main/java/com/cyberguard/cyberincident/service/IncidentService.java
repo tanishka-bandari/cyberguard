@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import com.cyberguard.cyberincident.model.Incident;
 import com.cyberguard.cyberincident.model.IncidentStatus;
+import com.cyberguard.cyberincident.model.IncidentType;
 import com.cyberguard.cyberincident.model.Role;
+import com.cyberguard.cyberincident.model.Severity;
 import com.cyberguard.cyberincident.model.User;
 import com.cyberguard.cyberincident.repository.IncidentRepository;
 import com.cyberguard.cyberincident.repository.UserRepository;
@@ -49,13 +51,11 @@ public class IncidentService {
         incident.setDescription(description);
 
         incident.setType(
-                com.cyberguard.cyberincident.model.IncidentType
-                        .valueOf(type)
+                IncidentType.valueOf(type)
         );
 
         incident.setSeverity(
-                com.cyberguard.cyberincident.model.Severity
-                        .valueOf(severity)
+                Severity.valueOf(severity)
         );
 
         incident.setRiskScore(riskScore);
@@ -63,7 +63,6 @@ public class IncidentService {
         incident.setReportedBy(user);
         incident.setReportedAt(LocalDateTime.now());
 
-        // New incident is initially unassigned
         incident.setAssignedTo(null);
 
         return incidentRepository.save(incident);
@@ -87,8 +86,10 @@ public class IncidentService {
         return incidentRepository.findByReportedById(user.getId());
     }
 
-    // Specific user's incidents.
-    // Only ANALYST/ADMIN can use this.
+    // =========================================================
+    // GET INCIDENTS BY USER
+    // =========================================================
+
     public List<Incident> getIncidentsByUser(
             Long userId,
             Authentication authentication) {
@@ -106,11 +107,47 @@ public class IncidentService {
     }
 
     // =========================================================
+    // UPDATE INCIDENT DETAILS
+    // =========================================================
+
+    // ANALYST/ADMIN → can edit any incident
+    public Incident updateIncident(
+            Long incidentId,
+            String title,
+            String description,
+            String type,
+            String severity,
+            Integer riskScore,
+            Authentication authentication) {
+
+        User authenticatedUser =
+                getAuthenticatedUser(authentication);
+
+        if (!isStaff(authenticatedUser)) {
+            throw new RuntimeException(
+                    "Access denied. Only ANALYST or ADMIN can update incidents."
+            );
+        }
+
+        Incident incident = incidentRepository.findById(incidentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Incident not found"));
+
+        incident.setTitle(title);
+        incident.setDescription(description);
+        incident.setType(IncidentType.valueOf(type));
+        incident.setSeverity(Severity.valueOf(severity));
+        incident.setRiskScore(riskScore);
+
+        return incidentRepository.save(incident);
+    }
+
+    // =========================================================
     // UPDATE STATUS
     // =========================================================
 
-    // USER → can update ONLY their own incident
-    // ANALYST/ADMIN → can update any incident
+    // USER → own incident
+    // ANALYST/ADMIN → any incident
     public Incident updateStatus(
             Long incidentId,
             String status,
@@ -143,7 +180,7 @@ public class IncidentService {
     // ASSIGN INCIDENT
     // =========================================================
 
-    // ADMIN → can assign an incident to an ANALYST/ADMIN
+    // ANALYST/ADMIN → can assign
     public Incident assignIncident(
             Long incidentId,
             Long assignedUserId,
@@ -152,34 +189,28 @@ public class IncidentService {
         User authenticatedUser =
                 getAuthenticatedUser(authentication);
 
-        // Only ADMIN can assign incidents
-        if (authenticatedUser.getRole() != Role.ADMIN) {
+        if (!isStaff(authenticatedUser)) {
             throw new RuntimeException(
-                    "Access denied. Only ADMIN can assign incidents."
+                    "Access denied. Only ANALYST or ADMIN can assign incidents."
             );
         }
 
-        // Find incident
         Incident incident = incidentRepository.findById(incidentId)
                 .orElseThrow(() ->
                         new RuntimeException("Incident not found"));
 
-        // Find employee/analyst
         User assignedUser = userRepository.findById(assignedUserId)
                 .orElseThrow(() ->
                         new RuntimeException("Assigned user not found"));
 
-        // Only staff members can be assigned
         if (!isStaff(assignedUser)) {
             throw new RuntimeException(
                     "Only ANALYST or ADMIN users can be assigned to incidents."
             );
         }
 
-        // Assign the incident
         incident.setAssignedTo(assignedUser);
 
-        // Once assigned, move incident into investigation
         incident.setStatus(
                 IncidentStatus.UNDER_INVESTIGATION
         );
@@ -191,7 +222,7 @@ public class IncidentService {
     // UNASSIGN INCIDENT
     // =========================================================
 
-    // ADMIN → can remove the current assignment
+    // ANALYST/ADMIN → can unassign
     public Incident unassignIncident(
             Long incidentId,
             Authentication authentication) {
@@ -199,9 +230,9 @@ public class IncidentService {
         User authenticatedUser =
                 getAuthenticatedUser(authentication);
 
-        if (authenticatedUser.getRole() != Role.ADMIN) {
+        if (!isStaff(authenticatedUser)) {
             throw new RuntimeException(
-                    "Access denied. Only ADMIN can unassign incidents."
+                    "Access denied. Only ANALYST or ADMIN can unassign incidents."
             );
         }
 
@@ -209,11 +240,8 @@ public class IncidentService {
                 .orElseThrow(() ->
                         new RuntimeException("Incident not found"));
 
-        // Remove assigned employee
         incident.setAssignedTo(null);
 
-        // If it was still being investigated,
-        // return it to REPORTED state
         if (incident.getStatus()
                 == IncidentStatus.UNDER_INVESTIGATION) {
 
@@ -229,7 +257,7 @@ public class IncidentService {
     // DELETE INCIDENT
     // =========================================================
 
-    // ADMIN only
+    // ANALYST/ADMIN → can delete
     public void deleteIncident(
             Long incidentId,
             Authentication authentication) {
@@ -237,9 +265,9 @@ public class IncidentService {
         User authenticatedUser =
                 getAuthenticatedUser(authentication);
 
-        if (authenticatedUser.getRole() != Role.ADMIN) {
+        if (!isStaff(authenticatedUser)) {
             throw new RuntimeException(
-                    "Access denied. Only ADMIN can delete incidents."
+                    "Access denied. Only ANALYST or ADMIN can delete incidents."
             );
         }
 
@@ -268,7 +296,9 @@ public class IncidentService {
         return userRepository.findByEmail(
                 authentication.getName()
         ).orElseThrow(() ->
-                new RuntimeException("Authenticated user not found")
+                new RuntimeException(
+                        "Authenticated user not found"
+                )
         );
     }
 

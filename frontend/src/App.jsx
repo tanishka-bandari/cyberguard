@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const API = "https://cyberguard-production-db91.up.railway.app";
+const API = "http://localhost:8080";
 
 async function getJson(response) {
   const text = await response.text();
@@ -42,24 +42,36 @@ function App() {
     setMessage("");
 
     try {
-      const response = await fetch(`${API}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(loginData),
-      });
+      const response = await fetch(
+        `${API}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(loginData),
+        }
+      );
 
       const data = await getJson(response);
 
       if (!response.ok) {
         throw new Error(
-          data.message || data.error || "Login failed"
+          data.message ||
+            data.error ||
+            "Login failed"
         );
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem(
+        "token",
+        data.token
+      );
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data)
+      );
 
       setUser(data);
       setLoggedIn(true);
@@ -78,27 +90,43 @@ function App() {
     setMessage("");
 
     try {
-      const formData = new URLSearchParams();
+      const formData =
+        new URLSearchParams();
 
-      formData.append("name", registerData.name);
-      formData.append("email", registerData.email);
-      formData.append("password", registerData.password);
+      formData.append(
+        "name",
+        registerData.name
+      );
 
-      const response = await fetch(`${API}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: formData,
-      });
+      formData.append(
+        "email",
+        registerData.email
+      );
+
+      formData.append(
+        "password",
+        registerData.password
+      );
+
+      const response = await fetch(
+        `${API}/api/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/x-www-form-urlencoded",
+          },
+          body: formData,
+        }
+      );
 
       const data = await getJson(response);
 
       if (!response.ok) {
         throw new Error(
           data.message ||
-          data.error ||
-          "Registration failed"
+            data.error ||
+            "Registration failed"
         );
       }
 
@@ -148,7 +176,9 @@ function App() {
 
           <div>
             <h1>CyberGuard</h1>
-            <p>Incident Reporting & Response</p>
+            <p>
+              Incident Reporting & Response
+            </p>
           </div>
 
         </div>
@@ -166,25 +196,32 @@ function App() {
           </h2>
 
           <p>
-            A centralized platform for reporting, investigating,
-            tracking and responding to cybersecurity incidents.
+            A centralized platform for reporting,
+            investigating, tracking and responding
+            to cybersecurity incidents.
           </p>
 
           <div className="feature-row">
 
             <div>
               <strong>🔐</strong>
-              <span>Secure Authentication</span>
+              <span>
+                Secure Authentication
+              </span>
             </div>
 
             <div>
               <strong>🚨</strong>
-              <span>Incident Tracking</span>
+              <span>
+                Incident Tracking
+              </span>
             </div>
 
             <div>
               <strong>📊</strong>
-              <span>SOC Dashboard</span>
+              <span>
+                SOC Dashboard
+              </span>
             </div>
 
           </div>
@@ -356,13 +393,23 @@ function App() {
 
 function Dashboard({ user, logout }) {
 
-  const [dashboard, setDashboard] = useState(null);
-  const [incidents, setIncidents] = useState([]);
+  const [dashboard, setDashboard] =
+    useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [incidents, setIncidents] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
 
   const [incidentFilter, setIncidentFilter] =
     useState("ALL");
+
+  const [sidebarSection, setSidebarSection] =
+    useState("DASHBOARD");
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(true);
 
   const [showReportForm, setShowReportForm] =
     useState(false);
@@ -370,12 +417,20 @@ function Dashboard({ user, logout }) {
   const [selectedIncident, setSelectedIncident] =
     useState(null);
 
-  const [notes, setNotes] = useState([]);
-  const [evidence, setEvidence] = useState([]);
-  const [auditLogs, setAuditLogs] = useState([]);
+  const [notes, setNotes] =
+    useState([]);
 
-  const [noteText, setNoteText] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [evidence, setEvidence] =
+    useState([]);
+
+  const [auditLogs, setAuditLogs] =
+    useState([]);
+
+  const [noteText, setNoteText] =
+    useState("");
+
+  const [selectedFile, setSelectedFile] =
+    useState(null);
 
   const [detailLoading, setDetailLoading] =
     useState(false);
@@ -394,11 +449,8 @@ function Dashboard({ user, logout }) {
   const [reportMessage, setReportMessage] =
     useState("");
 
-  // =========================================================
-  // ADMIN ASSIGNMENT
-  // =========================================================
-
-  const [staffUsers, setStaffUsers] = useState([]);
+  const [staffUsers, setStaffUsers] =
+    useState([]);
 
   const [selectedAssignee, setSelectedAssignee] =
     useState("");
@@ -409,6 +461,20 @@ function Dashboard({ user, logout }) {
   const [assignmentMessage, setAssignmentMessage] =
     useState("");
 
+  const [editMode, setEditMode] =
+    useState(false);
+
+  const [editData, setEditData] = useState({
+    title: "",
+    description: "",
+    type: "PHISHING",
+    severity: "LOW",
+    riskScore: 0,
+  });
+
+  const [editMessage, setEditMessage] =
+    useState("");
+
   const isStaff =
     user?.role === "ANALYST" ||
     user?.role === "ADMIN";
@@ -416,16 +482,17 @@ function Dashboard({ user, logout }) {
   const isAdmin =
     user?.role === "ADMIN";
 
-  // =========================================================
-  // INCIDENT FILTERS
-  // =========================================================
-
-  const matchesFilter = (incident, filter) => {
+  const matchesFilter = (
+    incident,
+    filter
+  ) => {
 
     switch (filter) {
 
       case "REPORTED":
-        return incident.status === "REPORTED";
+        return (
+          incident.status === "REPORTED"
+        );
 
       case "ASSIGNED":
         return Boolean(
@@ -436,21 +503,40 @@ function Dashboard({ user, logout }) {
 
       case "IN_PROGRESS":
         return (
-          incident.status === "UNDER_INVESTIGATION" ||
-          incident.status === "IN_PROGRESS"
+          incident.status ===
+            "UNDER_INVESTIGATION" ||
+          incident.status ===
+            "IN_PROGRESS"
         );
 
       case "SOLVED":
         return (
-          incident.status === "RESOLVED" ||
-          incident.status === "CLOSED"
+          incident.status ===
+            "RESOLVED" ||
+          incident.status ===
+            "CLOSED"
         );
 
       case "CRITICAL":
-        return incident.severity === "CRITICAL";
+        return (
+          incident.severity ===
+          "CRITICAL"
+        );
+
+      case "MEDIUM":
+        return incident.severity === "MEDIUM";
+
+      case "NORMAL":
+        return (
+          incident.severity === "NORMAL" ||
+          incident.severity === "LOW"
+        );
 
       case "HIGH":
-        return incident.severity === "HIGH";
+        return (
+          incident.severity ===
+          "HIGH"
+        );
 
       case "ALL":
       default:
@@ -474,9 +560,91 @@ function Dashboard({ user, logout }) {
       )
     ).length;
 
-  // =========================================================
-  // LOAD STAFF USERS
-  // =========================================================
+  const handleSidebarClick = (section) => {
+
+    setSidebarSection(section);
+
+    if (section === "DASHBOARD") {
+      setIncidentFilter("ALL");
+      setShowReportForm(false);
+      return;
+    }
+
+    if (section === "ALL_INCIDENTS") {
+      setIncidentFilter("ALL");
+      setShowReportForm(false);
+      return;
+    }
+
+    if (section === "MY_INCIDENTS") {
+      setIncidentFilter("ALL");
+      setShowReportForm(false);
+      return;
+    }
+
+    if (section === "REPORT_INCIDENT") {
+      setShowReportForm(true);
+      return;
+    }
+
+    if (section === "EMPLOYEES") {
+      setShowReportForm(false);
+      setTimeout(() => {
+        document.getElementById("employee-section")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 50);
+      return;
+    }
+
+    if (section === "WORKERS") {
+      setShowReportForm(false);
+      setTimeout(() => {
+        document.getElementById("worker-section")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 50);
+      return;
+    }
+
+    if (
+      section === "CRITICAL" ||
+      section === "HIGH" ||
+      section === "MEDIUM" ||
+      section === "NORMAL" ||
+      section === "REPORTED" ||
+      section === "IN_PROGRESS" ||
+      section === "SOLVED"
+    ) {
+      setIncidentFilter(section);
+      setShowReportForm(false);
+      return;
+    }
+
+    setShowReportForm(false);
+  };
+
+  const SidebarButton = ({ section, icon, label }) => (
+    <button
+      type="button"
+      className={`sidebar-item ${
+        sidebarSection === section ? "active" : ""
+      }`}
+      onClick={() => handleSidebarClick(section)}
+    >
+      <span className="sidebar-icon">{icon}</span>
+      <span className="sidebar-label">{label}</span>
+    </button>
+  );
+
+  const sidebarTitle =
+    user?.role === "ADMIN"
+      ? "ADMIN CONTROL"
+      : user?.role === "ANALYST"
+        ? "ANALYST"
+        : "USER";
 
   const loadStaffUsers = async () => {
 
@@ -526,10 +694,6 @@ function Dashboard({ user, logout }) {
 
     }
   };
-
-  // =========================================================
-  // LOAD DASHBOARD DATA
-  // =========================================================
 
   const loadData = async () => {
 
@@ -606,7 +770,6 @@ function Dashboard({ user, logout }) {
         visibleIncidents
       );
 
-      // Reload staff list for Admin
       if (isAdmin) {
         await loadStaffUsers();
       }
@@ -626,235 +789,178 @@ function Dashboard({ user, logout }) {
   };
 
   useEffect(() => {
-
     loadData();
-
   }, []);
-
-  // =========================================================
+    // =========================================================
   // REPORT INCIDENT
   // =========================================================
 
-  const handleReportIncident =
-    async (e) => {
+  const handleReportIncident = async (e) => {
+    e.preventDefault();
+    setReportMessage("");
 
-      e.preventDefault();
+    try {
+      const token =
+        localStorage.getItem("token");
 
-      setReportMessage("");
+      const params =
+        new URLSearchParams();
 
-      try {
+      params.append(
+        "title",
+        reportData.title
+      );
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+      params.append(
+        "description",
+        reportData.description
+      );
 
-        const params =
-          new URLSearchParams();
+      params.append(
+        "type",
+        reportData.type
+      );
 
-        params.append(
-          "title",
-          reportData.title
-        );
+      params.append(
+        "severity",
+        reportData.severity
+      );
 
-        params.append(
-          "description",
-          reportData.description
-        );
+      params.append(
+        "riskScore",
+        reportData.riskScore
+      );
 
-        params.append(
-          "type",
-          reportData.type
-        );
-
-        params.append(
-          "severity",
-          reportData.severity
-        );
-
-        params.append(
-          "riskScore",
-          reportData.riskScore
-        );
-
-        const response =
-          await fetch(
-            `${API}/api/incidents`,
-            {
-              method: "POST",
-
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-
-                "Content-Type":
-                  "application/x-www-form-urlencoded",
-              },
-
-              body: params,
-            }
-          );
-
-        const data =
-          await getJson(
-            response
-          );
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.message ||
-            data.error ||
-            "Failed to report incident"
-          );
-
+      const response = await fetch(
+        `${API}/api/incidents`,
+        {
+          method: "POST",
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+            "Content-Type":
+              "application/x-www-form-urlencoded",
+          },
+          body: params,
         }
+      );
 
-        setReportMessage(
-          "Incident reported successfully!"
+      const data =
+        await getJson(response);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+          data.error ||
+          "Failed to report incident"
         );
-
-        setReportData({
-          title: "",
-          description: "",
-          type: "PHISHING",
-          severity: "LOW",
-          riskScore: 25,
-        });
-
-        await loadData();
-
-        setTimeout(() => {
-
-          setShowReportForm(
-            false
-          );
-
-          setReportMessage("");
-
-        }, 1200);
-
-      } catch (error) {
-
-        setReportMessage(
-          error.message
-        );
-
       }
 
-    };
+      setReportMessage(
+        "Incident reported successfully!"
+      );
+
+      setReportData({
+        title: "",
+        description: "",
+        type: "PHISHING",
+        severity: "LOW",
+        riskScore: 25,
+      });
+
+      await loadData();
+
+      setTimeout(() => {
+        setShowReportForm(false);
+        setReportMessage("");
+      }, 1200);
+
+    } catch (error) {
+      setReportMessage(
+        error.message
+      );
+    }
+  };
 
   // =========================================================
   // OPEN INCIDENT
   // =========================================================
 
-  const openIncident =
-    async (incident) => {
+  const openIncident = async (incident) => {
 
-      setSelectedIncident(
-        incident
-      );
+    setSelectedIncident(incident);
+    setDetailLoading(true);
+    setActionMessage("");
+    setAssignmentMessage("");
+    setEditMessage("");
+    setEditMode(false);
 
-      setDetailLoading(
-        true
-      );
+    setSelectedAssignee(
+      incident.assignedToId
+        ? String(incident.assignedToId)
+        : ""
+    );
 
-      setActionMessage("");
+    try {
 
-      setAssignmentMessage("");
+      const token =
+        localStorage.getItem("token");
 
-      setSelectedAssignee(
-        incident.assignedToId
-          ? String(
-              incident.assignedToId
-            )
-          : ""
-      );
+      const headers = {
+        Authorization:
+          `Bearer ${token}`,
+      };
 
-      try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const headers = {
-          Authorization:
-            `Bearer ${token}`,
-        };
-
-        const notesResponse =
-          await fetch(
-            `${API}/api/incidents/${incident.id}/notes`,
-            {
-              headers,
-            }
-          );
-
-        const evidenceResponse =
-          await fetch(
-            `${API}/api/incidents/${incident.id}/evidence`,
-            {
-              headers,
-            }
-          );
-
-        const notesData =
-          await getJson(
-            notesResponse
-          );
-
-        const evidenceData =
-          await getJson(
-            evidenceResponse
-          );
-
-        setNotes(
-          Array.isArray(notesData)
-            ? notesData
-            : []
+      const notesResponse =
+        await fetch(
+          `${API}/api/incidents/${incident.id}/notes`,
+          { headers }
         );
 
-        setEvidence(
-          Array.isArray(
-            evidenceData
-          )
-            ? evidenceData
-            : []
+      const evidenceResponse =
+        await fetch(
+          `${API}/api/incidents/${incident.id}/evidence`,
+          { headers }
         );
 
-        if (isStaff) {
+      const notesData =
+        await getJson(notesResponse);
 
-          const auditResponse =
-            await fetch(
-              `${API}/api/audit-logs/incident/${incident.id}`,
-              {
-                headers,
-              }
+      const evidenceData =
+        await getJson(evidenceResponse);
+
+      setNotes(
+        Array.isArray(notesData)
+          ? notesData
+          : []
+      );
+
+      setEvidence(
+        Array.isArray(evidenceData)
+          ? evidenceData
+          : []
+      );
+
+      if (isStaff) {
+
+        const auditResponse =
+          await fetch(
+            `${API}/api/audit-logs/incident/${incident.id}`,
+            { headers }
+          );
+
+        if (auditResponse.ok) {
+
+          const auditData =
+            await getJson(
+              auditResponse
             );
 
-          if (
-            auditResponse.ok
-          ) {
-
-            const auditData =
-              await getJson(
-                auditResponse
-              );
-
-            setAuditLogs(
-              Array.isArray(
-                auditData
-              )
-                ? auditData
-                : []
-            );
-
-          } else {
-
-            setAuditLogs([]);
-
-          }
+          setAuditLogs(
+            Array.isArray(auditData)
+              ? auditData
+              : []
+          );
 
         } else {
 
@@ -862,22 +968,25 @@ function Dashboard({ user, logout }) {
 
         }
 
-      } catch (error) {
+      } else {
 
-        console.error(
-          "Incident details error:",
-          error
-        );
-
-      } finally {
-
-        setDetailLoading(
-          false
-        );
+        setAuditLogs([]);
 
       }
 
-    };
+    } catch (error) {
+
+      console.error(
+        "Incident details error:",
+        error
+      );
+
+    } finally {
+
+      setDetailLoading(false);
+
+    }
+  };
 
   // =========================================================
   // CLOSE INCIDENT
@@ -885,313 +994,429 @@ function Dashboard({ user, logout }) {
 
   const closeIncident = () => {
 
-    setSelectedIncident(
-      null
-    );
-
+    setSelectedIncident(null);
     setNotes([]);
-
     setEvidence([]);
-
     setAuditLogs([]);
-
     setNoteText("");
-
-    setSelectedFile(
-      null
-    );
-
+    setSelectedFile(null);
     setActionMessage("");
-
     setAssignmentMessage("");
-
     setSelectedAssignee("");
+    setEditMode(false);
+    setEditMessage("");
 
   };
 
   // =========================================================
-  // ASSIGN INCIDENT
+  // EDIT INCIDENT
+  // ANALYST + ADMIN
   // =========================================================
 
-  const assignIncident =
-    async () => {
+  const startEditIncident = () => {
 
-      if (
-        !selectedIncident ||
-        !selectedAssignee
-      ) {
+    if (!selectedIncident) {
+      return;
+    }
 
-        setAssignmentMessage(
-          "Please select an analyst."
-        );
+    setEditData({
+      title:
+        selectedIncident.title || "",
 
-        return;
-      }
+      description:
+        selectedIncident.description || "",
 
-      setAssignmentLoading(
-        true
+      type:
+        selectedIncident.type ||
+        "PHISHING",
+
+      severity:
+        selectedIncident.severity ||
+        "LOW",
+
+      riskScore:
+        selectedIncident.riskScore || 0,
+    });
+
+    setEditMessage("");
+    setEditMode(true);
+  };
+
+  const cancelEditIncident = () => {
+
+    setEditMode(false);
+    setEditMessage("");
+
+  };
+
+  const handleEditIncident = async (e) => {
+
+    e.preventDefault();
+
+    if (!isStaff) {
+      return;
+    }
+
+    if (!selectedIncident) {
+      return;
+    }
+
+    setEditMessage("");
+
+    try {
+
+      const token =
+        localStorage.getItem("token");
+
+      const params =
+        new URLSearchParams();
+
+      params.append(
+        "title",
+        editData.title
       );
 
-      setAssignmentMessage("");
+      params.append(
+        "description",
+        editData.description
+      );
 
-      try {
+      params.append(
+        "type",
+        editData.type
+      );
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+      params.append(
+        "severity",
+        editData.severity
+      );
 
-        const response =
-          await fetch(
-            `${API}/api/incidents/${selectedIncident.id}/assign?userId=${selectedAssignee}`,
-            {
-              method: "PUT",
+      params.append(
+        "riskScore",
+        editData.riskScore
+      );
 
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
+      const response =
+        await fetch(
+          `${API}/api/incidents/${selectedIncident.id}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
 
-        const data =
-          await getJson(
-            response
-          );
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.message ||
-            data.error ||
-            "Failed to assign incident"
-          );
-
-        }
-
-        setSelectedIncident(
-          data
+              "Content-Type":
+                "application/x-www-form-urlencoded",
+            },
+            body: params,
+          }
         );
 
-        setIncidents(
-          incidents.map(
-            (incident) =>
-              incident.id === data.id
-                ? data
-                : incident
-          )
-        );
+      const data =
+        await getJson(response);
 
-        setAssignmentMessage(
-          `Incident assigned to ${
-            data.assignedToName ||
-            data.assignedToEmail ||
-            "selected analyst"
-          }.`
-        );
+      if (!response.ok) {
 
-        await loadData();
-
-      } catch (error) {
-
-        setAssignmentMessage(
-          error.message
-        );
-
-      } finally {
-
-        setAssignmentLoading(
-          false
+        throw new Error(
+          data.message ||
+          data.error ||
+          "Failed to update incident"
         );
 
       }
 
-    };
+      setSelectedIncident(data);
+
+      setIncidents(
+        incidents.map(
+          (incident) =>
+            incident.id === data.id
+              ? data
+              : incident
+        )
+      );
+
+      setEditMode(false);
+
+      setEditMessage(
+        "Incident updated successfully."
+      );
+
+      setActionMessage(
+        "Incident details updated successfully."
+      );
+
+      await loadData();
+
+    } catch (error) {
+
+      setEditMessage(
+        error.message
+      );
+
+    }
+  };
+
+  // =========================================================
+  // ASSIGN INCIDENT
+  // ADMIN ONLY
+  // =========================================================
+
+  const assignIncident = async () => {
+
+    if (!isAdmin) {
+      setAssignmentMessage("Only Admin can assign incidents.");
+      return;
+    }
+
+    if (
+      !selectedIncident ||
+      !selectedAssignee
+    ) {
+
+      setAssignmentMessage(
+        "Please select an analyst."
+      );
+
+      return;
+    }
+
+    setAssignmentLoading(true);
+    setAssignmentMessage("");
+
+    try {
+
+      const token =
+        localStorage.getItem("token");
+
+      const response =
+        await fetch(
+          `${API}/api/incidents/${selectedIncident.id}/assign?userId=${selectedAssignee}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await getJson(response);
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.message ||
+          data.error ||
+          "Failed to assign incident"
+        );
+
+      }
+
+      setSelectedIncident(data);
+
+      setIncidents(
+        incidents.map(
+          (incident) =>
+            incident.id === data.id
+              ? data
+              : incident
+        )
+      );
+
+      setAssignmentMessage(
+        `Incident assigned to ${
+          data.assignedToName ||
+          data.assignedToEmail ||
+          "selected employee"
+        }.`
+      );
+
+      await loadData();
+
+    } catch (error) {
+
+      setAssignmentMessage(
+        error.message
+      );
+
+    } finally {
+
+      setAssignmentLoading(false);
+
+    }
+  };
 
   // =========================================================
   // UNASSIGN INCIDENT
   // =========================================================
 
-  const unassignIncident =
-    async () => {
+  const unassignIncident = async () => {
 
-      if (!selectedIncident) {
-        return;
-      }
+    if (!isAdmin) {
+      setAssignmentMessage("Only Admin can unassign incidents.");
+      return;
+    }
 
-      const confirmed =
-        window.confirm(
-          `Remove assignment from incident #${selectedIncident.id}?`
-        );
+    if (!selectedIncident) {
+      return;
+    }
 
-      if (!confirmed) {
-        return;
-      }
-
-      setAssignmentLoading(
-        true
+    const confirmed =
+      window.confirm(
+        `Remove assignment from incident #${selectedIncident.id}?`
       );
 
-      setAssignmentMessage("");
+    if (!confirmed) {
+      return;
+    }
 
-      try {
+    setAssignmentLoading(true);
+    setAssignmentMessage("");
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+    try {
 
-        const response =
-          await fetch(
-            `${API}/api/incidents/${selectedIncident.id}/unassign`,
-            {
-              method: "PUT",
+      const token =
+        localStorage.getItem("token");
 
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await getJson(
-            response
-          );
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.message ||
-            data.error ||
-            "Failed to remove assignment"
-          );
-
-        }
-
-        setSelectedIncident(
-          data
+      const response =
+        await fetch(
+          `${API}/api/incidents/${selectedIncident.id}/unassign`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
         );
 
-        setIncidents(
-          incidents.map(
-            (incident) =>
-              incident.id === data.id
-                ? data
-                : incident
-          )
-        );
+      const data =
+        await getJson(response);
 
-        setSelectedAssignee(
-          ""
-        );
+      if (!response.ok) {
 
-        setAssignmentMessage(
-          "Incident assignment removed."
-        );
-
-        await loadData();
-
-      } catch (error) {
-
-        setAssignmentMessage(
-          error.message
-        );
-
-      } finally {
-
-        setAssignmentLoading(
-          false
+        throw new Error(
+          data.message ||
+          data.error ||
+          "Failed to remove assignment"
         );
 
       }
 
-    };
+      setSelectedIncident(data);
+
+      setIncidents(
+        incidents.map(
+          (incident) =>
+            incident.id === data.id
+              ? data
+              : incident
+        )
+      );
+
+      setSelectedAssignee("");
+
+      setAssignmentMessage(
+        "Incident assignment removed."
+      );
+
+      await loadData();
+
+    } catch (error) {
+
+      setAssignmentMessage(
+        error.message
+      );
+
+    } finally {
+
+      setAssignmentLoading(false);
+
+    }
+  };
 
   // =========================================================
   // ADD INVESTIGATION NOTE
   // =========================================================
 
-  const handleAddNote =
-    async (e) => {
+  const handleAddNote = async (e) => {
 
-      e.preventDefault();
+    e.preventDefault();
 
-      if (
-        !selectedIncident ||
-        !noteText.trim()
-      ) {
-        return;
-      }
+    if (!isStaff) {
+      return;
+    }
 
-      try {
+    if (
+      !selectedIncident ||
+      !noteText.trim()
+    ) {
+      return;
+    }
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+    try {
 
-        const params =
-          new URLSearchParams();
+      const token =
+        localStorage.getItem("token");
 
-        params.append(
-          "note",
-          noteText
+      const params =
+        new URLSearchParams();
+
+      params.append(
+        "note",
+        noteText
+      );
+
+      const response =
+        await fetch(
+          `${API}/api/incidents/${selectedIncident.id}/notes`,
+          {
+            method: "POST",
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+
+              "Content-Type":
+                "application/x-www-form-urlencoded",
+            },
+            body: params,
+          }
         );
 
-        const response =
-          await fetch(
-            `${API}/api/incidents/${selectedIncident.id}/notes`,
-            {
-              method: "POST",
+      const data =
+        await getJson(response);
 
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
+      if (!response.ok) {
 
-                "Content-Type":
-                  "application/x-www-form-urlencoded",
-              },
-
-              body: params,
-            }
-          );
-
-        const data =
-          await getJson(
-            response
-          );
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.message ||
-            data.error ||
-            "Failed to add note"
-          );
-
-        }
-
-        setNotes([
-          ...notes,
-          data,
-        ]);
-
-        setNoteText("");
-
-        setActionMessage(
-          "Investigation note added."
-        );
-
-      } catch (error) {
-
-        setActionMessage(
-          error.message
+        throw new Error(
+          data.message ||
+          data.error ||
+          "Failed to add note"
         );
 
       }
 
-    };
+      setNotes([
+        ...notes,
+        data,
+      ]);
+
+      setNoteText("");
+
+      setActionMessage(
+        "Investigation note added."
+      );
+
+    } catch (error) {
+
+      setActionMessage(
+        error.message
+      );
+
+    }
+  };
 
   // =========================================================
   // EVIDENCE UPLOAD
@@ -1201,6 +1426,10 @@ function Dashboard({ user, logout }) {
     async (e) => {
 
       e.preventDefault();
+
+      if (!isStaff) {
+        return;
+      }
 
       if (
         !selectedIncident ||
@@ -1217,9 +1446,7 @@ function Dashboard({ user, logout }) {
       try {
 
         const token =
-          localStorage.getItem(
-            "token"
-          );
+          localStorage.getItem("token");
 
         const formData =
           new FormData();
@@ -1234,20 +1461,16 @@ function Dashboard({ user, logout }) {
             `${API}/api/incidents/${selectedIncident.id}/evidence`,
             {
               method: "POST",
-
               headers: {
                 Authorization:
                   `Bearer ${token}`,
               },
-
               body: formData,
             }
           );
 
         const data =
-          await getJson(
-            response
-          );
+          await getJson(response);
 
         if (!response.ok) {
 
@@ -1264,9 +1487,7 @@ function Dashboard({ user, logout }) {
           data,
         ]);
 
-        setSelectedFile(
-          null
-        );
+        setSelectedFile(null);
 
         e.target.reset();
 
@@ -1281,33 +1502,77 @@ function Dashboard({ user, logout }) {
         );
 
       }
-
     };
 
   // =========================================================
   // UPDATE STATUS
   // =========================================================
 
-  const updateStatus =
-    async (newStatus) => {
+  const updateStatus = async (
+    newStatus
+  ) => {
 
-      if (!selectedIncident) {
-        return;
+    if (!isStaff) {
+      return;
+    }
+
+    if (!selectedIncident) {
+      return;
+    }
+
+    try {
+
+      const token =
+        localStorage.getItem("token");
+
+      const response =
+        await fetch(
+          `${API}/api/incidents/${selectedIncident.id}/status?status=${newStatus}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await getJson(response);
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.message ||
+          data.error ||
+          "Status update failed"
+        );
+
       }
 
-      try {
+      setSelectedIncident(data);
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+      setIncidents(
+        incidents.map(
+          (incident) =>
+            incident.id === data.id
+              ? data
+              : incident
+        )
+      );
 
-        const response =
+      await loadData();
+
+      setActionMessage(
+        `Status changed to ${newStatus}.`
+      );
+
+      if (isStaff) {
+
+        const auditResponse =
           await fetch(
-            `${API}/api/incidents/${selectedIncident.id}/status?status=${newStatus}`,
+            `${API}/api/audit-logs/incident/${data.id}`,
             {
-              method: "PUT",
-
               headers: {
                 Authorization:
                   `Bearer ${token}`,
@@ -1315,83 +1580,30 @@ function Dashboard({ user, logout }) {
             }
           );
 
-        const data =
-          await getJson(
-            response
-          );
+        if (auditResponse.ok) {
 
-        if (!response.ok) {
+          const auditData =
+            await getJson(
+              auditResponse
+            );
 
-          throw new Error(
-            data.message ||
-            data.error ||
-            "Status update failed"
+          setAuditLogs(
+            Array.isArray(auditData)
+              ? auditData
+              : []
           );
 
         }
-
-        setSelectedIncident(
-          data
-        );
-
-        setIncidents(
-          incidents.map(
-            (incident) =>
-              incident.id === data.id
-                ? data
-                : incident
-          )
-        );
-
-        await loadData();
-
-        setActionMessage(
-          `Status changed to ${newStatus}.`
-        );
-
-        if (isStaff) {
-
-          const auditResponse =
-            await fetch(
-              `${API}/api/audit-logs/incident/${data.id}`,
-              {
-                headers: {
-                  Authorization:
-                    `Bearer ${token}`,
-                },
-              }
-            );
-
-          if (
-            auditResponse.ok
-          ) {
-
-            const auditData =
-              await getJson(
-                auditResponse
-              );
-
-            setAuditLogs(
-              Array.isArray(
-                auditData
-              )
-                ? auditData
-                : []
-            );
-
-          }
-
-        }
-
-      } catch (error) {
-
-        setActionMessage(
-          error.message
-        );
-
       }
 
-    };
+    } catch (error) {
+
+      setActionMessage(
+        error.message
+      );
+
+    }
+  };
 
   // =========================================================
   // MARK SOLVED
@@ -1407,15 +1619,19 @@ function Dashboard({ user, logout }) {
       await updateStatus(
         "RESOLVED"
       );
-
     };
 
   // =========================================================
   // DELETE INCIDENT
+  // ANALYST + ADMIN
   // =========================================================
 
   const deleteIncident =
     async () => {
+
+      if (!isStaff) {
+        return;
+      }
 
       if (!selectedIncident) {
         return;
@@ -1433,16 +1649,13 @@ function Dashboard({ user, logout }) {
       try {
 
         const token =
-          localStorage.getItem(
-            "token"
-          );
+          localStorage.getItem("token");
 
         const response =
           await fetch(
             `${API}/api/incidents/${selectedIncident.id}`,
             {
               method: "DELETE",
-
               headers: {
                 Authorization:
                   `Bearer ${token}`,
@@ -1451,9 +1664,7 @@ function Dashboard({ user, logout }) {
           );
 
         const data =
-          await getJson(
-            response
-          );
+          await getJson(response);
 
         if (!response.ok) {
 
@@ -1465,23 +1676,14 @@ function Dashboard({ user, logout }) {
 
         }
 
-        setSelectedIncident(
-          null
-        );
-
+        setSelectedIncident(null);
         setNotes([]);
-
         setEvidence([]);
-
         setAuditLogs([]);
-
         setNoteText("");
-
-        setSelectedFile(
-          null
-        );
-
+        setSelectedFile(null);
         setActionMessage("");
+        setEditMode(false);
 
         await loadData();
 
@@ -1492,7 +1694,6 @@ function Dashboard({ user, logout }) {
         );
 
       }
-
     };
 
   // =========================================================
@@ -1510,11 +1711,80 @@ function Dashboard({ user, logout }) {
   }
 
   // =========================================================
-  // DASHBOARD UI
+  // DASHBOARD UI STARTS IN PART 3
   // =========================================================
+    return (
+    <div className={`dashboard-page ${sidebarOpen ? "sidebar-visible" : "sidebar-collapsed"}`}>
 
-  return (
-    <div className="dashboard-page">
+      <aside className="cyber-sidebar">
+
+        <div className="sidebar-brand">
+          <div className="sidebar-brand-icon">🛡️</div>
+          <div>
+            <strong>CYBERGUARD</strong>
+            <small>{sidebarTitle}</small>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="sidebar-toggle"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Toggle sidebar"
+        >
+          {sidebarOpen ? "◀" : "▶"}
+        </button>
+
+        <nav className="sidebar-nav">
+          <SidebarButton section="DASHBOARD" icon="▣" label="Dashboard" />
+
+          {user?.role === "ADMIN" && (
+            <>
+              <SidebarButton section="EMPLOYEES" icon="👥" label="Employees" />
+              <SidebarButton section="WORKERS" icon="👨‍💻" label="Workers" />
+            </>
+          )}
+
+          {user?.role === "USER" ? (
+            <>
+              <SidebarButton section="MY_INCIDENTS" icon="📋" label="My Incidents" />
+              <SidebarButton section="REPORT_INCIDENT" icon="➕" label="Report Incident" />
+              <SidebarButton section="SOLVED" icon="✅" label="Solved" />
+            </>
+          ) : (
+            <>
+              <SidebarButton section="ALL_INCIDENTS" icon="🚨" label="All Incidents" />
+              <div className="sidebar-divider" />
+              <div className="sidebar-group-title">SEVERITY</div>
+              <SidebarButton section="CRITICAL" icon="🔴" label="Critical" />
+              <SidebarButton section="HIGH" icon="🟠" label="High" />
+              <SidebarButton section="MEDIUM" icon="🟡" label="Medium" />
+              <SidebarButton section="NORMAL" icon="🟢" label="Normal" />
+              <div className="sidebar-divider" />
+              <div className="sidebar-group-title">STATUS</div>
+              <SidebarButton section="REPORTED" icon="📋" label="Reported" />
+              <SidebarButton section="IN_PROGRESS" icon="🔎" label="In Progress" />
+              <SidebarButton section="SOLVED" icon="✅" label="Solved" />
+            </>
+          )}
+        </nav>
+
+        <div className="sidebar-bottom">
+          {user?.role === "ADMIN" && (
+            <div className="sidebar-admin-status">
+              <span>⚙</span>
+              <span>Admin</span>
+            </div>
+          )}
+          <button type="button" className="sidebar-logout" onClick={logout}>
+            <span>🚪</span>
+            <span>Logout</span>
+          </button>
+        </div>
+
+      </aside>
+
+      <div className="dashboard-main-area">
 
       {/* =====================================================
           TOP BAR
@@ -1527,7 +1797,6 @@ function Dashboard({ user, logout }) {
           <span>🛡️</span>
 
           <div>
-
             <strong>
               CyberGuard
             </strong>
@@ -1535,35 +1804,32 @@ function Dashboard({ user, logout }) {
             <small>
               Security Operations Center
             </small>
-
           </div>
 
+        </div>
+
+        <div className="topbar-search">
+          <span>⌕</span>
+          <input aria-label="Search incidents" placeholder="Search incidents, users..." />
         </div>
 
         <div className="user-section">
-
+          <button className="notification-btn" type="button" aria-label="Notifications">🔔<span className="notification-dot" /></button>
+          <div className="avatar">{(user?.name || "A").charAt(0).toUpperCase()}</div>
           <div className="user-info">
-
-            <strong>
-              {user?.name}
-            </strong>
-
-            <span>
-              {user?.role}
-            </span>
-
+            <strong>{user?.name || "Admin"}</strong>
+            <span>{user?.role || "ADMIN"}</span>
           </div>
-
-          <button
-            className="logout-btn"
-            onClick={logout}
-          >
-            Logout
-          </button>
-
+          <div className="topbar-clock">{new Date().toLocaleDateString("en-IN", {weekday:"short", day:"2-digit", month:"short", year:"numeric"})}<b>{new Date().toLocaleTimeString("en-IN", {hour:"2-digit", minute:"2-digit"})}</b></div>
+          <button className="logout-btn" onClick={logout}>Logout</button>
         </div>
 
       </header>
+
+
+      {/* =====================================================
+          MAIN DASHBOARD
+      ====================================================== */}
 
       <main className="dashboard-content">
 
@@ -1595,11 +1861,14 @@ function Dashboard({ user, logout }) {
 
         </div>
 
+
         {/* ===================================================
             STAT CARDS
         ==================================================== */}
 
         <div className="stats-grid">
+
+          {/* TOTAL */}
 
           <button
             type="button"
@@ -1635,6 +1904,9 @@ function Dashboard({ user, logout }) {
 
           </button>
 
+
+          {/* REPORTED */}
+
           <button
             type="button"
             className={`stat-card ${
@@ -1668,6 +1940,9 @@ function Dashboard({ user, logout }) {
             </div>
 
           </button>
+
+
+          {/* ASSIGNED */}
 
           {isStaff && (
 
@@ -1709,6 +1984,9 @@ function Dashboard({ user, logout }) {
 
           )}
 
+
+          {/* IN PROGRESS */}
+
           <button
             type="button"
             className={`stat-card ${
@@ -1744,6 +2022,9 @@ function Dashboard({ user, logout }) {
             </div>
 
           </button>
+
+
+          {/* SOLVED */}
 
           <button
             type="button"
@@ -1781,142 +2062,157 @@ function Dashboard({ user, logout }) {
 
           </button>
 
-          {isStaff && (
 
-            <>
-              <button
-                type="button"
-                className={`stat-card ${
-                  incidentFilter === "CRITICAL"
-                    ? "active-filter"
-                    : ""
-                }`}
-                onClick={() =>
-                  setIncidentFilter(
-                    "CRITICAL"
-                  )
-                }
-              >
+          {/* EMPLOYEES */}
 
-                <div className="stat-icon">
-                  🔴
-                </div>
-
-                <div>
-
-                  <p>
-                    Critical
-                  </p>
-
-                  <h2>
-                    {getCount("CRITICAL")}
-                  </h2>
-
-                  <span>
-                    Critical threats →
-                  </span>
-
-                </div>
-
-              </button>
-
-              <button
-                type="button"
-                className={`stat-card ${
-                  incidentFilter === "HIGH"
-                    ? "active-filter"
-                    : ""
-                }`}
-                onClick={() =>
-                  setIncidentFilter(
-                    "HIGH"
-                  )
-                }
-              >
-
-                <div className="stat-icon">
-                  🟠
-                </div>
-
-                <div>
-
-                  <p>
-                    High Risk
-                  </p>
-
-                  <h2>
-                    {getCount("HIGH")}
-                  </h2>
-
-                  <span>
-                    High-risk cases →
-                  </span>
-
-                </div>
-
-              </button>
-            </>
-
-          )}
-
-        </div>
-
-        {/* ===================================================
-            ACTION BUTTONS
-        ==================================================== */}
-
-        <div className="action-row">
-
-          <button
-            className="primary-action"
-            onClick={() => {
-
-              setShowReportForm(
-                true
-              );
-
-              setReportMessage("");
-
-            }}
-          >
-            + Report Incident
-          </button>
-
-          {user?.role === "USER" && (
+          {isAdmin && (
 
             <button
-              className="secondary-action"
+              type="button"
+              className="stat-card"
               onClick={() => {
-
-                setIncidentFilter(
-                  "ALL"
-                );
-
-                loadData();
-
+                document
+                  .getElementById(
+                    "employee-section"
+                  )
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  });
               }}
             >
-              📋 My Incidents
+
+              <div className="stat-icon">
+                👨‍💻
+              </div>
+
+              <div>
+
+                <p>
+                  Employees
+                </p>
+
+                <h2>
+                  {staffUsers.length}
+                </h2>
+
+                <span>
+                  View employees →
+                </span>
+
+              </div>
+
             </button>
 
           )}
 
+
+          {/* CRITICAL */}
+
           <button
-            className="secondary-action"
-            onClick={() => {
-
+            type="button"
+            className={`stat-card ${
+              incidentFilter === "CRITICAL"
+                ? "active-filter"
+                : ""
+            }`}
+            onClick={() =>
               setIncidentFilter(
-                "ALL"
-              );
-
-              loadData();
-
-            }}
+                "CRITICAL"
+              )
+            }
           >
-            ↻ Refresh
+
+            <div className="stat-icon">
+              🔴
+            </div>
+
+            <div>
+
+              <p>
+                Critical
+              </p>
+
+              <h2>
+                {getCount("CRITICAL")}
+              </h2>
+
+              <span>
+                Critical threats →
+              </span>
+
+            </div>
+
+          </button>
+
+
+          {/* HIGH */}
+
+          <button
+            type="button"
+            className={`stat-card ${
+              incidentFilter === "HIGH"
+                ? "active-filter"
+                : ""
+            }`}
+            onClick={() =>
+              setIncidentFilter("HIGH")
+            }
+          >
+
+            <div className="stat-icon">
+              🟠
+            </div>
+
+            <div>
+
+              <p>
+                High Risk
+              </p>
+
+              <h2>
+                {getCount("HIGH")}
+              </h2>
+
+              <span>
+                High risk incidents →
+              </span>
+
+            </div>
+
           </button>
 
         </div>
+
+
+        <SocOverview
+          incidents={incidents}
+          getCount={getCount}
+          onOpenIncident={openIncident}
+          sidebarFilter={incidentFilter}
+        />
+
+
+        {/* ===================================================
+            REPORT INCIDENT BUTTON
+        ==================================================== */}
+
+        <div className="dashboard-actions">
+
+          <button
+            className="primary-btn"
+            onClick={() => {
+              setShowReportForm(
+                !showReportForm
+              );
+
+              setReportMessage("");
+            }}
+          >
+            🚨 Report New Incident
+          </button>
+
+        </div>
+
 
         {/* ===================================================
             REPORT FORM
@@ -1924,57 +2220,44 @@ function Dashboard({ user, logout }) {
 
         {showReportForm && (
 
-          <section className="report-section">
+          <section className="panel">
 
-            <div className="section-header">
+            <div className="panel-header">
 
               <div>
 
-                <h2>
-                  Report Security Incident
-                </h2>
+                <span className="security-label">
+                  INCIDENT REPORTING
+                </span>
 
-                <p>
-                  Submit a new cybersecurity incident
-                </p>
+                <h2>
+                  Report Cybersecurity Incident
+                </h2>
 
               </div>
 
               <button
                 className="close-btn"
-                onClick={() => {
-
-                  setShowReportForm(
-                    false
-                  );
-
-                  setReportMessage("");
-
-                }}
+                onClick={() =>
+                  setShowReportForm(false)
+                }
               >
                 ✕
               </button>
 
             </div>
 
+
             <form
-              className="report-form"
+              className="incident-form"
               onSubmit={
                 handleReportIncident
               }
             >
 
-              {reportMessage && (
+              <div className="form-grid">
 
-                <div className="message">
-                  {reportMessage}
-                </div>
-
-              )}
-
-              <div className="form-row">
-
-                <div className="form-group">
+                <div>
 
                   <label>
                     Incident Title
@@ -1982,7 +2265,6 @@ function Dashboard({ user, logout }) {
 
                   <input
                     type="text"
-                    placeholder="Example: Suspicious phishing email"
                     value={
                       reportData.title
                     }
@@ -1993,12 +2275,14 @@ function Dashboard({ user, logout }) {
                           e.target.value,
                       })
                     }
+                    placeholder="Enter incident title"
                     required
                   />
 
                 </div>
 
-                <div className="form-group">
+
+                <div>
 
                   <label>
                     Incident Type
@@ -2041,10 +2325,6 @@ function Dashboard({ user, logout }) {
                       DDoS
                     </option>
 
-                    <option value="SOCIAL_ENGINEERING">
-                      Social Engineering
-                    </option>
-
                     <option value="OTHER">
                       Other
                     </option>
@@ -2053,35 +2333,8 @@ function Dashboard({ user, logout }) {
 
                 </div>
 
-              </div>
 
-              <div className="form-group">
-
-                <label>
-                  Description
-                </label>
-
-                <textarea
-                  rows="4"
-                  placeholder="Describe what happened..."
-                  value={
-                    reportData.description
-                  }
-                  onChange={(e) =>
-                    setReportData({
-                      ...reportData,
-                      description:
-                        e.target.value,
-                    })
-                  }
-                  required
-                />
-
-              </div>
-
-              <div className="form-row">
-
-                <div className="form-group">
+                <div>
 
                   <label>
                     Severity
@@ -2120,15 +2373,15 @@ function Dashboard({ user, logout }) {
 
                 </div>
 
-                <div className="form-group">
+
+                <div>
 
                   <label>
-                    Risk Score:{" "}
-                    {reportData.riskScore}
+                    Risk Score
                   </label>
 
                   <input
-                    type="range"
+                    type="number"
                     min="0"
                     max="100"
                     value={
@@ -2138,9 +2391,7 @@ function Dashboard({ user, logout }) {
                       setReportData({
                         ...reportData,
                         riskScore:
-                          Number(
-                            e.target.value
-                          ),
+                          e.target.value,
                       })
                     }
                   />
@@ -2149,32 +2400,47 @@ function Dashboard({ user, logout }) {
 
               </div>
 
-              <div className="form-actions">
 
-                <button
-                  type="button"
-                  className="secondary-action"
-                  onClick={() => {
+              <div>
 
-                    setShowReportForm(
-                      false
-                    );
+                <label>
+                  Description
+                </label>
 
-                    setReportMessage("");
-
-                  }}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="primary-action"
-                >
-                  Submit Incident
-                </button>
+                <textarea
+                  value={
+                    reportData.description
+                  }
+                  onChange={(e) =>
+                    setReportData({
+                      ...reportData,
+                      description:
+                        e.target.value,
+                    })
+                  }
+                  placeholder="Describe the incident..."
+                  rows="5"
+                  required
+                />
 
               </div>
+
+
+              {reportMessage && (
+
+                <div className="message">
+                  {reportMessage}
+                </div>
+
+              )}
+
+
+              <button
+                type="submit"
+                className="primary-btn"
+              >
+                Submit Incident
+              </button>
 
             </form>
 
@@ -2182,209 +2448,152 @@ function Dashboard({ user, logout }) {
 
         )}
 
+
         {/* ===================================================
             INCIDENT LIST
         ==================================================== */}
 
-        <section className="incident-section">
+        <section className="panel">
 
-          <div className="section-header">
+          <div className="panel-header">
 
             <div>
 
+              <span className="security-label">
+                INCIDENT MONITOR
+              </span>
+
               <h2>
-
                 {incidentFilter === "ALL"
-                  ? isStaff
-                    ? "All Incidents"
-                    : "My Incidents"
-
-                  : incidentFilter ===
-                    "IN_PROGRESS"
-                    ? "In Progress Incidents"
-
-                  : incidentFilter ===
-                    "SOLVED"
-                    ? "Solved Incidents"
-
-                  : incidentFilter ===
-                    "ASSIGNED"
-                    ? "Assigned Incidents"
-
-                  : incidentFilter ===
-                    "REPORTED"
-                    ? "Reported Incidents"
-
-                  : incidentFilter ===
-                    "CRITICAL"
-                    ? "Critical Incidents"
-
-                  : "High Risk Incidents"}
-
+                  ? "All Incidents"
+                  : `${incidentFilter.replace(
+                      "_",
+                      " "
+                    )} Incidents`}
               </h2>
-
-              <p>
-
-                {filteredIncidents.length} incident
-                {filteredIncidents.length === 1
-                  ? ""
-                  : "s"} shown
-
-                {incidentFilter !==
-                  "ALL" &&
-                  " • Click Total Incidents to clear the filter"}
-
-              </p>
 
             </div>
 
+            <span className="incident-count">
+              {filteredIncidents.length}
+            </span>
+
           </div>
+
 
           {filteredIncidents.length === 0 ? (
 
             <div className="empty-state">
-              No incidents available.
+
+              <div>
+                🛡️
+              </div>
+
+              <h3>
+                No incidents found
+              </h3>
+
+              <p>
+                There are no incidents matching
+                the current filter.
+              </p>
+
             </div>
 
           ) : (
 
-            <div className="table-container">
+            <div className="incident-list">
 
-              <table>
+              {filteredIncidents.map(
+                (incident) => (
 
-                <thead>
+                  <button
+                    key={incident.id}
+                    type="button"
+                    className={`incident-card ${
+                      incident.severity ===
+                      "CRITICAL"
+                        ? "critical-incident"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      openIncident(
+                        incident
+                      )
+                    }
+                  >
 
-                  <tr>
+                    <div className="incident-card-top">
 
-                    <th>ID</th>
+                      <span className="incident-id">
+                        #{incident.id}
+                      </span>
 
-                    <th>
-                      Incident
-                    </th>
-
-                    <th>
-                      Type
-                    </th>
-
-                    <th>
-                      Severity
-                    </th>
-
-                    <th>
-                      Assigned To
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th>
-                      Risk Score
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {filteredIncidents.map(
-                    (incident) => (
-
-                      <tr
-                        key={
-                          incident.id
-                        }
-                        onClick={() =>
-                          openIncident(
-                            incident
-                          )
-                        }
-                        style={{
-                          cursor:
-                            "pointer",
-                        }}
+                      <span
+                        className={`severity-badge ${
+                          (
+                            incident.severity ||
+                            ""
+                          ).toLowerCase()
+                        }`}
                       >
+                        {incident.severity}
+                      </span>
 
-                        <td>
-                          #{incident.id}
-                        </td>
+                    </div>
 
-                        <td>
 
-                          <strong>
-                            {
-                              incident.title
-                            }
-                          </strong>
+                    <h3>
+                      {incident.title}
+                    </h3>
 
-                        </td>
 
-                        <td>
-                          {incident.type}
-                        </td>
+                    <p>
+                      {incident.description}
+                    </p>
 
-                        <td>
 
-                          <span
-                            className={
-                              `badge ${
-                                incident.severity.toLowerCase()
-                              }`
-                            }
-                          >
-                            {
-                              incident.severity
-                            }
-                          </span>
+                    <div className="incident-meta">
 
-                        </td>
+                      <span>
+                        Type:{" "}
+                        {incident.type}
+                      </span>
 
-                        <td>
+                      <span>
+                        Status:{" "}
+                        {incident.status}
+                      </span>
 
-                          {incident.assignedToName ||
-                            incident.assignedToEmail ||
-                            "Unassigned"}
+                      {incident.assignedToName && (
 
-                        </td>
+                        <span>
+                          👤{" "}
+                          {incident.assignedToName}
+                        </span>
 
-                        <td>
+                      )}
 
-                          <span
-                            className={
-                              `status ${
-                                incident.status.toLowerCase()
-                              }`
-                            }
-                          >
+                    </div>
 
-                            {incident.status.replaceAll(
-                              "_",
-                              " "
-                            )}
 
-                          </span>
+                    <div className="incident-card-footer">
 
-                        </td>
+                      <span>
+                        Risk Score:{" "}
+                        {incident.riskScore}
+                      </span>
 
-                        <td>
+                      <span>
+                        Open →
+                      </span>
 
-                          <strong>
-                            {
-                              incident.riskScore
-                            }
-                          </strong>
+                    </div>
 
-                        </td>
+                  </button>
 
-                      </tr>
-
-                    )
-                  )}
-
-                </tbody>
-
-              </table>
+                )
+              )}
 
             </div>
 
@@ -2392,131 +2601,590 @@ function Dashboard({ user, logout }) {
 
         </section>
 
+
+        {/* ===================================================
+            ADMIN EMPLOYEES + WORKERS
+        ==================================================== */}
+
+        {isAdmin && (
+          <>
+            {sidebarSection === "EMPLOYEES" && (
+              <section
+                id="employee-section"
+                className="panel employee-management-panel"
+              >
+                <div className="panel-header">
+                  <div>
+                    <span className="security-label">
+                      ADMIN CONTROL
+                    </span>
+                    <h2>👥 Employees</h2>
+                    <p>Employee details and incident workload</p>
+                  </div>
+
+                  <span className="incident-count">
+                    {staffUsers.filter(
+                      (staff) => staff.role !== "ANALYST"
+                    ).length}
+                  </span>
+                </div>
+
+                {staffUsers.filter(
+                  (staff) => staff.role !== "ANALYST"
+                ).length === 0 ? (
+                  <div className="empty-state">
+                    <div>👥</div>
+                    <h3>No employees found</h3>
+                    <p>No employee records are currently available.</p>
+                  </div>
+                ) : (
+                  <div className="employee-list">
+                    {staffUsers
+                      .filter((staff) => staff.role !== "ANALYST")
+                      .map((employee) => {
+                        const employeeIncidents = incidents.filter(
+                          (incident) =>
+                            incident.assignedToId === employee.id ||
+                            incident.assignedToEmail === employee.email
+                        );
+
+                        const assignedCount = employeeIncidents.length;
+                        const inProgressCount = employeeIncidents.filter(
+                          (incident) =>
+                            incident.status === "IN_PROGRESS" ||
+                            incident.status === "UNDER_INVESTIGATION"
+                        ).length;
+                        const solvedCount = employeeIncidents.filter(
+                          (incident) =>
+                            incident.status === "SOLVED" ||
+                            incident.status === "RESOLVED" ||
+                            incident.status === "CLOSED"
+                        ).length;
+
+                        return (
+                          <div
+                            className="employee-card"
+                            key={employee.id}
+                          >
+                            <div className="employee-avatar">👤</div>
+
+                            <div className="employee-info">
+                              <h3>{employee.name || "Unknown Employee"}</h3>
+                              <p>{employee.email || "No email"}</p>
+                              <span>
+                                Role: {employee.role || "EMPLOYEE"}
+                              </span>
+                            </div>
+
+                            <div className="employee-stats">
+                              <div>
+                                <strong>{assignedCount}</strong>
+                                <span>Assigned</span>
+                              </div>
+                              <div>
+                                <strong>{inProgressCount}</strong>
+                                <span>In Progress</span>
+                              </div>
+                              <div>
+                                <strong>{solvedCount}</strong>
+                                <span>Solved</span>
+                              </div>
+                            </div>
+
+                            <div className="employee-status">
+                              {employee.status || "ACTIVE"}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {sidebarSection === "WORKERS" && (
+              <section
+                id="worker-section"
+                className="panel employee-management-panel"
+              >
+                <div className="panel-header">
+                  <div>
+                    <span className="security-label">
+                      SECURITY OPERATIONS
+                    </span>
+                    <h2>👨‍💻 Security Workers</h2>
+                    <p>Analysts and security staff workload</p>
+                  </div>
+
+                  <span className="incident-count">
+                    {staffUsers.filter(
+                      (staff) => staff.role === "ANALYST"
+                    ).length}
+                  </span>
+                </div>
+
+                {staffUsers.filter(
+                  (staff) => staff.role === "ANALYST"
+                ).length === 0 ? (
+                  <div className="empty-state">
+                    <div>👨‍💻</div>
+                    <h3>No security workers found</h3>
+                    <p>No analyst/security worker records are currently available.</p>
+                  </div>
+                ) : (
+                  <div className="employee-list">
+                    {staffUsers
+                      .filter((staff) => staff.role === "ANALYST")
+                      .map((worker) => {
+                        const workerIncidents = incidents.filter(
+                          (incident) =>
+                            incident.assignedToId === worker.id ||
+                            incident.assignedToEmail === worker.email
+                        );
+
+                        const assignedCount = workerIncidents.length;
+                        const inProgressCount = workerIncidents.filter(
+                          (incident) =>
+                            incident.status === "IN_PROGRESS" ||
+                            incident.status === "UNDER_INVESTIGATION"
+                        ).length;
+                        const solvedCount = workerIncidents.filter(
+                          (incident) =>
+                            incident.status === "SOLVED" ||
+                            incident.status === "RESOLVED" ||
+                            incident.status === "CLOSED"
+                        ).length;
+
+                        return (
+                          <div
+                            className="employee-card worker-card"
+                            key={worker.id}
+                          >
+                            <div className="employee-avatar">👨‍💻</div>
+
+                            <div className="employee-info">
+                              <h3>{worker.name || "Security Worker"}</h3>
+                              <p>{worker.email || "No email"}</p>
+                              <span>
+                                Role: {worker.role || "ANALYST"}
+                              </span>
+                            </div>
+
+                            <div className="employee-stats">
+                              <div>
+                                <strong>{assignedCount}</strong>
+                                <span>Assigned</span>
+                              </div>
+                              <div>
+                                <strong>{inProgressCount}</strong>
+                                <span>In Progress</span>
+                              </div>
+                              <div>
+                                <strong>{solvedCount}</strong>
+                                <span>Solved</span>
+                              </div>
+                            </div>
+
+                            <div className="employee-status">
+                              {worker.status || "ACTIVE"}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </section>
+            )}
+          </>
+        )}
+
         {/* ===================================================
             INCIDENT DETAILS
         ==================================================== */}
 
         {selectedIncident && (
 
-          <section className="report-section">
+          <div className="modal-overlay">
 
-            <div className="section-header">
+            <div className="incident-modal">
 
-              <div>
+              <div className="modal-header">
 
-                <span className="security-label">
-                  INCIDENT INVESTIGATION
-                </span>
+                <div>
 
-                <h2>
+                  <span className="security-label">
+                    INCIDENT #{selectedIncident.id}
+                  </span>
 
-                  #{selectedIncident.id}{" "}
-                  {
-                    selectedIncident.title
-                  }
-
-                </h2>
-
-                <p>
-                  {
-                    selectedIncident.description
-                  }
-                </p>
-
-              </div>
-
-              <button
-                className="close-btn"
-                onClick={
-                  closeIncident
-                }
-              >
-                ✕
-              </button>
-
-            </div>
-
-            {detailLoading ? (
-
-              <div className="empty-state">
-                Loading incident details...
-              </div>
-
-            ) : (
-
-              <div className="report-form">
-
-                {actionMessage && (
-
-                  <div className="message">
-                    {actionMessage}
-                  </div>
-
-                )}
-
-                {/* =========================================
-                    INCIDENT SUMMARY CARDS
-                ========================================== */}
-
-                <div className="stats-grid">
-
-                  <StatCard
-                    icon="⚠️"
-                    title="Severity"
-                    value={
-                      selectedIncident.severity
-                    }
-                  />
-
-                  <StatCard
-                    icon="📈"
-                    title="Risk Score"
-                    value={
-                      selectedIncident.riskScore
-                    }
-                  />
-
-                  <StatCard
-                    icon="🔄"
-                    title="Status"
-                    value={
-                      selectedIncident.status
-                    }
-                  />
-
-                  <StatCard
-                    icon="👤"
-                    title="Reported By"
-                    value={
-                      selectedIncident.reportedByName
-                    }
-                  />
+                  <h2>
+                    {selectedIncident.title}
+                  </h2>
 
                 </div>
 
-                {/* =========================================
-                    ASSIGNMENT PANEL - ADMIN ONLY
-                ========================================== */}
+                <button
+                  className="close-btn"
+                  onClick={
+                    closeIncident
+                  }
+                >
+                  ✕
+                </button>
 
-                {isAdmin && (
+              </div>
 
-                  <div className="form-group">
 
-                    <label>
-                      🎯 Incident Assignment
-                    </label>
+              {detailLoading ? (
 
-                    <div
-                      className="form-row"
-                    >
+                <div className="loading-screen">
+                  Loading incident details...
+                </div>
 
-                      <div
-                        className="form-group"
-                      >
+              ) : (
 
-                        <label>
-                          Assign To
-                        </label>
+                <div className="incident-detail">
+
+                  <div className="detail-section">
+
+                    <div className="detail-grid">
+
+                      <div>
+                        <span>
+                          Type
+                        </span>
+
+                        <strong>
+                          {selectedIncident.type}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Severity
+                        </span>
+
+                        <strong>
+                          {selectedIncident.severity}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Status
+                        </span>
+
+                        <strong>
+                          {selectedIncident.status}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Risk Score
+                        </span>
+
+                        <strong>
+                          {selectedIncident.riskScore}
+                        </strong>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+                  <div className="detail-section">
+
+                    <h3>
+                      Description
+                    </h3>
+
+                    <p>
+                      {selectedIncident.description}
+                    </p>
+
+                  </div>
+
+
+                  {/* STAFF CONTROLS */}
+
+                  {isStaff && (
+
+                    <div className="detail-section">
+
+                      <h3>
+                        Incident Management
+                      </h3>
+
+
+                      <div className="action-row">
+
+                        <button
+                          className="secondary-btn"
+                          onClick={
+                            startEditIncident
+                          }
+                        >
+                          ✏️ Edit
+                        </button>
+
+
+                        <button
+                          className="secondary-btn"
+                          onClick={() =>
+                            updateStatus(
+                              "UNDER_INVESTIGATION"
+                            )
+                          }
+                        >
+                          🔎 Investigate
+                        </button>
+
+
+                        <button
+                          className="secondary-btn"
+                          onClick={() =>
+                            updateStatus(
+                              "RESOLVED"
+                            )
+                          }
+                        >
+                          ✅ Resolve
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+
+                  {/* EDIT FORM */}
+
+                  {isStaff &&
+                    editMode && (
+
+                      <div className="detail-section">
+
+                        <h3>
+                          Edit Incident
+                        </h3>
+
+                        <form
+                          className="incident-form"
+                          onSubmit={
+                            handleEditIncident
+                          }
+                        >
+
+                          <label>
+                            Title
+                          </label>
+
+                          <input
+                            value={
+                              editData.title
+                            }
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                title:
+                                  e.target.value,
+                              })
+                            }
+                            required
+                          />
+
+
+                          <label>
+                            Description
+                          </label>
+
+                          <textarea
+                            rows="4"
+                            value={
+                              editData.description
+                            }
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                description:
+                                  e.target.value,
+                              })
+                            }
+                            required
+                          />
+
+
+                          <div className="form-grid">
+
+                            <div>
+
+                              <label>
+                                Type
+                              </label>
+
+                              <select
+                                value={
+                                  editData.type
+                                }
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    type:
+                                      e.target.value,
+                                  })
+                                }
+                              >
+
+                                <option value="PHISHING">
+                                  Phishing
+                                </option>
+
+                                <option value="MALWARE">
+                                  Malware
+                                </option>
+
+                                <option value="RANSOMWARE">
+                                  Ransomware
+                                </option>
+
+                                <option value="DATA_BREACH">
+                                  Data Breach
+                                </option>
+
+                                <option value="UNAUTHORIZED_ACCESS">
+                                  Unauthorized Access
+                                </option>
+
+                                <option value="DDOS">
+                                  DDoS
+                                </option>
+
+                                <option value="OTHER">
+                                  Other
+                                </option>
+
+                              </select>
+
+                            </div>
+
+
+                            <div>
+
+                              <label>
+                                Severity
+                              </label>
+
+                              <select
+                                value={
+                                  editData.severity
+                                }
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    severity:
+                                      e.target.value,
+                                  })
+                                }
+                              >
+
+                                <option value="LOW">
+                                  Low
+                                </option>
+
+                                <option value="MEDIUM">
+                                  Medium
+                                </option>
+
+                                <option value="HIGH">
+                                  High
+                                </option>
+
+                                <option value="CRITICAL">
+                                  Critical
+                                </option>
+
+                              </select>
+
+                            </div>
+
+
+                            <div>
+
+                              <label>
+                                Risk Score
+                              </label>
+
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={
+                                  editData.riskScore
+                                }
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    riskScore:
+                                      e.target.value,
+                                  })
+                                }
+                              />
+
+                            </div>
+
+                          </div>
+
+
+                          {editMessage && (
+
+                            <div className="message">
+                              {editMessage}
+                            </div>
+
+                          )}
+
+
+                          <div className="action-row">
+
+                            <button
+                              type="submit"
+                              className="primary-btn"
+                            >
+                              Save Changes
+                            </button>
+
+                            <button
+                              type="button"
+                              className="secondary-btn"
+                              onClick={
+                                cancelEditIncident
+                              }
+                            >
+                              Cancel
+                            </button>
+
+                          </div>
+
+                        </form>
+
+                      </div>
+
+                    )}
+
+
+                  {/* ASSIGNMENT */}
+
+                  {isAdmin && (
+
+                    <div className="detail-section">
+
+                      <h3>
+                        Analyst Assignment
+                      </h3>
+
+                      <div className="assignment-row">
 
                         <select
                           value={
@@ -2530,25 +3198,20 @@ function Dashboard({ user, logout }) {
                         >
 
                           <option value="">
-                            Select Analyst / Admin
+                            Select employee
                           </option>
 
-                          {staffUsers.map(
-                            (staff) => (
+                          {staffUsers
+                            .filter((staff) => staff.role === "ANALYST")
+                            .map((staff) => (
 
                               <option
-                                key={
-                                  staff.id
-                                }
-                                value={
-                                  staff.id
-                                }
+                                key={staff.id}
+                                value={staff.id}
                               >
-
-                                {staff.name}{" "}
-                                —{" "}
+                                {staff.name} -
+                                {" "}
                                 {staff.role}
-
                               </option>
 
                             )
@@ -2556,72 +3219,147 @@ function Dashboard({ user, logout }) {
 
                         </select>
 
-                      </div>
-
-                      <div
-                        className="form-group"
-                      >
-
-                        <label>
-                          Current Assignee
-                        </label>
-
-                        <input
-                          type="text"
-                          value={
-                            selectedIncident.assignedToName ||
-                            selectedIncident.assignedToEmail ||
-                            "Unassigned"
-                          }
-                          readOnly
-                        />
-
-                      </div>
-
-                    </div>
-
-                    {assignmentMessage && (
-
-                      <div className="message">
-                        {assignmentMessage}
-                      </div>
-
-                    )}
-
-                    <div className="form-actions">
-
-                      <button
-                        type="button"
-                        className="primary-action"
-                        onClick={
-                          assignIncident
-                        }
-                        disabled={
-                          assignmentLoading ||
-                          !selectedAssignee
-                        }
-                      >
-
-                        {assignmentLoading
-                          ? "Assigning..."
-                          : "🎯 Assign Incident"}
-
-                      </button>
-
-                      {selectedIncident.assignedToId && (
 
                         <button
-                          type="button"
-                          className="secondary-action"
+                          className="primary-btn"
                           onClick={
-                            unassignIncident
+                            assignIncident
                           }
                           disabled={
                             assignmentLoading
                           }
                         >
-                          ↩ Unassign
+                          {assignmentLoading
+                            ? "Assigning..."
+                            : "Assign"}
                         </button>
+
+
+                        {selectedIncident.assignedToId && (
+
+                          <button
+                            className="secondary-btn"
+                            onClick={
+                              unassignIncident
+                            }
+                            disabled={
+                              assignmentLoading
+                            }
+                          >
+                            Unassign
+                          </button>
+
+                        )}
+
+                      </div>
+
+
+                      {assignmentMessage && (
+
+                        <div className="message">
+                          {assignmentMessage}
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  )}
+                  {/* =================================================
+                      NOTES
+                  ================================================== */}
+
+                  <div className="detail-section">
+
+                    <div className="section-title-row">
+
+                      <h3>
+                        Investigation Notes
+                      </h3>
+
+                      <span>
+                        {notes.length} notes
+                      </span>
+
+                    </div>
+
+
+                    {isStaff && (
+
+                      <div className="note-form">
+
+                        <textarea
+                          value={noteText}
+                          onChange={(e) =>
+                            setNoteText(
+                              e.target.value
+                            )
+                          }
+                          placeholder="Add investigation note..."
+                          rows="3"
+                        />
+
+                        <button
+                          className="primary-btn"
+                          onClick={
+                            handleAddNote
+                          }
+                          disabled={
+                            !noteText.trim()
+                          }
+                        >
+                          Add Note
+                        </button>
+
+                      </div>
+
+                    )}
+
+
+                    <div className="notes-list">
+
+                      {notes.length === 0 ? (
+
+                        <p className="muted-text">
+                          No investigation notes yet.
+                        </p>
+
+                      ) : (
+
+                        notes.map((note) => (
+
+                          <div
+                            className="note-card"
+                            key={note.id}
+                          >
+
+                            <div className="note-header">
+
+                              <strong>
+                                {note.authorName ||
+                                  note.createdByName ||
+                                  "Security Analyst"}
+                              </strong>
+
+                              <span>
+                                {note.createdAt
+                                  ? new Date(
+                                      note.createdAt
+                                    ).toLocaleString()
+                                  : ""}
+                              </span>
+
+                            </div>
+
+                            <p>
+                              {note.content ||
+                                note.note ||
+                                note.text}
+                            </p>
+
+                          </div>
+
+                        ))
 
                       )}
 
@@ -2629,434 +3367,550 @@ function Dashboard({ user, logout }) {
 
                   </div>
 
-                )}
 
-                {/* =========================================
-                    STATUS UPDATE
-                ========================================== */}
+                  {/* =================================================
+                      EVIDENCE
+                  ================================================== */}
 
-                {isStaff && (
+                  <div className="detail-section">
 
-                  <div className="form-group">
+                    <div className="section-title-row">
 
-                    <label>
-                      Update Incident Status
-                    </label>
+                      <h3>
+                        Evidence
+                      </h3>
 
-                    <select
-                      value={
-                        selectedIncident.status
-                      }
-                      onChange={(e) =>
-                        updateStatus(
-                          e.target.value
-                        )
-                      }
-                    >
+                      <span>
+                        🔐 Secured
+                      </span>
 
-                      <option value="REPORTED">
-                        REPORTED
-                      </option>
+                    </div>
 
-                      <option value="TRIAGED">
-                        TRIAGED
-                      </option>
 
-                      <option value="ASSIGNED">
-                        ASSIGNED
-                      </option>
+                    {isStaff && (
 
-                      <option value="UNDER_INVESTIGATION">
-                        UNDER INVESTIGATION
-                      </option>
+                      <div className="evidence-upload">
 
-                      <option value="CONTAINED">
-                        CONTAINED
-                      </option>
+                        <input
+                          type="file"
+                          id="evidence-file"
+                          onChange={(e) =>
+                            setSelectedFile(
+                              e.target.files?.[0] ||
+                              null
+                            )
+                          }
+                        />
 
-                      <option value="RESOLVED">
-                        RESOLVED
-                      </option>
+                        <button
+                          className="primary-btn"
+                          onClick={
+                            handleEvidenceUpload
+                          }
+                          disabled={
+                            !selectedFile
+                          }
+                        >
+                          Upload Evidence
+                        </button>
 
-                      <option value="CLOSED">
-                        CLOSED
-                      </option>
+                      </div>
 
-                    </select>
+                    )}
+
+
+                    {evidence.length === 0 ? (
+
+                      <p className="muted-text">
+                        No evidence uploaded.
+                      </p>
+
+                    ) : (
+
+                      <div className="evidence-list">
+
+                        {evidence.map(
+                          (item) => (
+
+                            <div
+                              className="evidence-card"
+                              key={item.id}
+                            >
+
+                              <div className="evidence-icon">
+                                📁
+                              </div>
+
+                              <div>
+
+                                <strong>
+                                  {item.fileName ||
+                                    item.name ||
+                                    "Evidence File"}
+                                </strong>
+
+                                <span>
+                                  {item.uploadedByName ||
+                                    "Security Team"}
+                                </span>
+
+                              </div>
+
+                            </div>
+
+                          )
+                        )}
+
+                      </div>
+
+                    )}
 
                   </div>
 
-                )}
 
-                {/* =========================================
-                    USER SOLVE BUTTON
-                ========================================== */}
+                  {/* =================================================
+                      AUDIT TRAIL
+                  ================================================== */}
 
-                {user?.role === "USER" &&
-                  selectedIncident.status !==
-                    "RESOLVED" &&
-                  selectedIncident.status !==
-                    "CLOSED" && (
+                  {isStaff && (
 
-                    <div className="form-group">
+                    <div className="detail-section">
 
-                      <label>
-                        Incident Resolution
-                      </label>
+                      <div className="section-title-row">
+
+                        <h3>
+                          Audit Trail
+                        </h3>
+
+                        <span>
+                          System activity
+                        </span>
+
+                      </div>
+
+
+                      {auditLogs.length === 0 ? (
+
+                        <p className="muted-text">
+                          No audit activity available.
+                        </p>
+
+                      ) : (
+
+                        <div className="audit-list">
+
+                          {auditLogs.map(
+                            (log, index) => (
+
+                              <div
+                                className="audit-item"
+                                key={
+                                  log.id ||
+                                  index
+                                }
+                              >
+
+                                <div className="audit-dot">
+                                  ●
+                                </div>
+
+                                <div>
+
+                                  <strong>
+                                    {log.action ||
+                                      log.event ||
+                                      "System Event"}
+                                  </strong>
+
+                                  <p>
+                                    {log.description ||
+                                      log.message ||
+                                      ""}
+                                  </p>
+
+                                  <span>
+                                    {log.createdAt
+                                      ? new Date(
+                                          log.createdAt
+                                        ).toLocaleString()
+                                      : ""}
+                                  </span>
+
+                                </div>
+
+                              </div>
+
+                            )
+                          )}
+
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  )}
+
+
+                  {/* =================================================
+                      USER SOLVE BUTTON
+                  ================================================== */}
+
+                  {!isStaff &&
+                    selectedIncident.status !==
+                      "RESOLVED" &&
+                    selectedIncident.status !==
+                      "CLOSED" && (
+
+                      <div className="detail-section">
+
+                        <button
+                          className="primary-btn"
+                          onClick={
+                            markIncidentSolved
+                          }
+                        >
+                          ✅ Mark Incident as Solved
+                        </button>
+
+                      </div>
+
+                    )}
+
+
+                  {/* =================================================
+                      DELETE
+                  ================================================== */}
+
+                  {isStaff && (
+
+                    <div className="danger-zone">
+
+                      <div>
+
+                        <strong>
+                          Danger Zone
+                        </strong>
+
+                        <p>
+                          Permanently remove this
+                          incident from the system.
+                        </p>
+
+                      </div>
 
                       <button
-                        type="button"
-                        className="primary-action"
+                        className="danger-btn"
                         onClick={
-                          markIncidentSolved
+                          deleteIncident
                         }
                       >
-                        ✅ Mark as Solved
+                        🗑️ Delete Incident
                       </button>
 
                     </div>
 
                   )}
 
-                {/* =========================================
-                    NOTES + EVIDENCE
-                ========================================== */}
-
-                {isStaff && (
-
-                  <div className="form-row">
-
-                    <div className="form-group">
-
-                      <label>
-                        Add Investigation Note
-                      </label>
-
-                      <form
-                        onSubmit={
-                          handleAddNote
-                        }
-                      >
-
-                        <textarea
-                          rows="4"
-                          placeholder="Enter investigation findings..."
-                          value={
-                            noteText
-                          }
-                          onChange={(e) =>
-                            setNoteText(
-                              e.target.value
-                            )
-                          }
-                        />
-
-                        <button
-                          type="submit"
-                          className="primary-action"
-                        >
-                          Add Note
-                        </button>
-
-                      </form>
-
-                    </div>
-
-                    <div className="form-group">
-
-                      <label>
-                        Upload Evidence
-                      </label>
-
-                      <form
-                        onSubmit={
-                          handleEvidenceUpload
-                        }
-                      >
-
-                        <input
-                          type="file"
-                          onChange={(e) =>
-                            setSelectedFile(
-                              e.target.files[0]
-                            )
-                          }
-                        />
-
-                        <br />
-                        <br />
-
-                        <button
-                          type="submit"
-                          className="primary-action"
-                        >
-                          Upload Evidence
-                        </button>
-
-                      </form>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-                {/* =========================================
-                    NOTES + EVIDENCE DISPLAY
-                ========================================== */}
-
-                <div className="form-row">
-
-                  <div className="form-group">
-
-                    <label>
-                      Investigation Notes
-                    </label>
-
-                    {notes.length === 0 ? (
-
-                      <div className="empty-state">
-                        No investigation notes yet.
-                      </div>
-
-                    ) : (
-
-                      notes.map(
-                        (note) => (
-
-                          <div
-                            key={
-                              note.id
-                            }
-                            className="message"
-                          >
-
-                            <strong>
-                              {
-                                note.addedByName
-                              }
-                            </strong>
-
-                            <p>
-                              {
-                                note.note
-                              }
-                            </p>
-
-                            <small>
-                              {
-                                note.createdAt
-                              }
-                            </small>
-
-                          </div>
-
-                        )
-                      )
-
-                    )}
-
-                  </div>
-
-                  <div className="form-group">
-
-                    <label>
-                      Evidence
-                    </label>
-
-                    {evidence.length === 0 ? (
-
-                      <div className="empty-state">
-                        No evidence uploaded yet.
-                      </div>
-
-                    ) : (
-
-                      evidence.map(
-                        (item) => (
-
-                          <div
-                            key={
-                              item.id
-                            }
-                            className="message"
-                          >
-
-                            <strong>
-                              {
-                                item.fileName
-                              }
-                            </strong>
-
-                            <p>
-                              Type:{" "}
-                              {
-                                item.fileType
-                              }
-                            </p>
-
-                            <p>
-                              Size:{" "}
-                              {
-                                item.fileSize
-                              }{" "}
-                              bytes
-                            </p>
-
-                            <small>
-                              SHA-256:
-                              <br />
-                              {
-                                item.sha256Hash
-                              }
-                            </small>
-
-                          </div>
-
-                        )
-                      )
-
-                    )}
-
-                  </div>
-
                 </div>
 
-                {/* =========================================
-                    AUDIT TRAIL
-                ========================================== */}
+              )}
 
-                {isStaff && (
+            </div>
 
-                  <div className="form-group">
-
-                    <label>
-                      Audit Trail
-                    </label>
-
-                    {auditLogs.length === 0 ? (
-
-                      <div className="empty-state">
-                        No audit logs available.
-                      </div>
-
-                    ) : (
-
-                      auditLogs.map(
-                        (log) => (
-
-                          <div
-                            key={
-                              log.id
-                            }
-                            className="message"
-                          >
-
-                            <strong>
-                              {
-                                log.action
-                              }
-                            </strong>
-
-                            <p>
-                              {
-                                log.details
-                              }
-                            </p>
-
-                            <small>
-                              By:{" "}
-                              {
-                                log.userName
-                              }
-                              {" • "}
-                              {
-                                log.createdAt
-                              }
-                            </small>
-
-                          </div>
-
-                        )
-                      )
-
-                    )}
-
-                  </div>
-
-                )}
-
-                {/* =========================================
-                    DELETE - ADMIN ONLY
-                ========================================== */}
-
-                {isAdmin && (
-
-                  <div className="form-group">
-
-                    <label>
-                      Administrator Actions
-                    </label>
-
-                    <button
-                      type="button"
-                      className="primary-action"
-                      onClick={
-                        deleteIncident
-                      }
-                      style={{
-                        backgroundColor:
-                          "#dc2626",
-                      }}
-                    >
-                      🗑️ Delete Incident
-                    </button>
-
-                  </div>
-
-                )}
-
-              </div>
-
-            )}
-
-          </section>
+          </div>
 
         )}
 
       </main>
 
+
+      {/* =====================================================
+          TERMINAL FOOTER
+      ====================================================== */}
+
+      <footer className="terminal-footer">
+
+        <div className="terminal-line">
+
+          <span className="terminal-prompt">
+            root@cyberguard:~$
+          </span>
+
+          <span>
+            monitoring network traffic...
+          </span>
+
+          <span className="terminal-status">
+            ● SYSTEM ONLINE
+          </span>
+
+        </div>
+
+        <div className="terminal-line">
+
+          <span>
+            [SOC]
+          </span>
+
+          <span>
+            Threat monitoring active
+          </span>
+
+          <span>
+            Incidents: {incidents.length}
+          </span>
+
+          <span>
+            Critical: {getCount("CRITICAL")}
+          </span>
+
+        </div>
+
+      </footer>
+
+      </div>
+
     </div>
   );
 }
 
-function StatCard({
-  icon,
-  title,
-  value,
-}) {
+
+
+/* =========================================================
+   SOC VISUAL OVERVIEW — LIVE SOC COMMAND CENTER
+========================================================= */
+function SocOverview({ incidents, getCount, onOpenIncident, sidebarFilter }) {
+  const [packet, setPacket] = useState(0);
+  const [logs, setLogs] = useState([
+    "INFO  Perimeter scan initialized",
+    "WARN  Suspicious packet detected",
+    "INFO  Threat signatures synchronized",
+    "INFO  Encrypted traffic inspection active",
+    "INFO  Monitoring continuous...",
+  ]);
+  const [criticalPulse, setCriticalPulse] = useState(false);
+  const [lastPacketTime, setLastPacketTime] = useState(new Date());
+  const previousCritical = useRef(getCount("CRITICAL"));
+
+  const total = getCount("ALL");
+  const critical = getCount("CRITICAL");
+  const high = getCount("HIGH");
+  const medium = getCount("MEDIUM");
+  const normal = getCount("NORMAL");
+  const activeFilter = sidebarFilter || "ALL";
+
+  const safeTotal = Math.max(total, 1);
+  const criticalPct = Math.round((critical / safeTotal) * 100);
+  const highPct = Math.round((high / safeTotal) * 100);
+  const mediumPct = Math.round((medium / safeTotal) * 100);
+  const normalPct = Math.max(0, 100 - criticalPct - highPct - mediumPct);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPacket((v) => (v + 1) % 8);
+      setLastPacketTime(new Date());
+      setLogs((old) => {
+        const next = [
+          `INFO  ${new Date().toLocaleTimeString()}  Network packet received`,
+          "INFO  TLS traffic inspection complete",
+          "WARN  Suspicious signature sweep complete",
+          "INFO  Threat intelligence synchronized",
+          "INFO  Monitoring continuous...",
+          "INFO  Packet analysis complete",
+        ];
+        return [next[Math.floor(Math.random() * next.length)], ...old].slice(0, 5);
+      });
+    }, 1800);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (critical > previousCritical.current) {
+      setCriticalPulse(true);
+      const timer = setTimeout(() => setCriticalPulse(false), 6500);
+      previousCritical.current = critical;
+      return () => clearTimeout(timer);
+    }
+    previousCritical.current = critical;
+  }, [critical]);
+
+  const filteredRecent = activeFilter === "ALL" || activeFilter === "DASHBOARD"
+    ? [...incidents].slice(-5).reverse()
+    : incidents.filter((item) => {
+        if (["CRITICAL", "HIGH", "MEDIUM", "NORMAL"].includes(activeFilter)) {
+          return activeFilter === "NORMAL"
+            ? item.severity === "NORMAL" || item.severity === "LOW"
+            : item.severity === activeFilter;
+        }
+        if (["REPORTED", "IN_PROGRESS", "SOLVED"].includes(activeFilter)) {
+          return item.status === activeFilter ||
+            (activeFilter === "IN_PROGRESS" && item.status === "UNDER_INVESTIGATION") ||
+            (activeFilter === "SOLVED" && ["RESOLVED", "CLOSED"].includes(item.status));
+        }
+        return true;
+      }).slice(-5).reverse();
+
+  const overviewTitle =
+    activeFilter === "ALL" || activeFilter === "DASHBOARD"
+      ? "Threat Distribution"
+      : `${activeFilter.replaceAll("_", " ")} Incidents`;
 
   return (
-    <div className="stat-card">
+    <section className={`soc-overview-grid ${critical > 0 ? "has-critical" : "system-clear"}`}>
+      <div className="soc-panel overview-panel">
+        <div className="soc-panel-head">
+          <div>
+            <span className="security-label">INCIDENT OVERVIEW</span>
+            <h2>{overviewTitle}</h2>
+          </div>
+          <span className="live-pill"><i /> LIVE FEED</span>
+        </div>
 
-      <div className="stat-icon">
-        {icon}
+        <div className="threat-summary-strip">
+          <div><span>ACTIVE CASES</span><b>{total}</b></div>
+          <div><span>CRITICAL RATE</span><b className={critical ? "danger-number" : "safe-number"}>{criticalPct}%</b></div>
+          <div><span>RISK INDEX</span><b>{critical * 4 + high * 3 + medium * 2 + normal}</b></div>
+        </div>
+
+        <div className="overview-body">
+          <div className="donut-wrap premium-donut-wrap">
+            <div
+              className="donut premium-donut"
+              style={{
+                background: `conic-gradient(#ff315f 0 ${criticalPct}%, #ff9f43 ${criticalPct}% ${criticalPct + highPct}%, #ffd23f ${criticalPct + highPct}% ${criticalPct + highPct + mediumPct}%, #18c998 ${criticalPct + highPct + mediumPct}% 100%)`,
+              }}
+            >
+              <div className="donut-core">
+                <strong>{total}</strong>
+                <span>INCIDENTS</span>
+              </div>
+            </div>
+            <div className="donut-orbit orbit-one" />
+            <div className="donut-orbit orbit-two" />
+          </div>
+
+          <div className="legend-list premium-legend-list">
+            <div className="legend-row critical-row">
+              <i className="legend critical"/><span>Critical</span><b>{critical}</b><small>{criticalPct}%</small>
+            </div>
+            <div className="legend-row high-row">
+              <i className="legend high"/><span>High</span><b>{high}</b><small>{highPct}%</small>
+            </div>
+            <div className="legend-row medium-row">
+              <i className="legend medium"/><span>Medium</span><b>{medium}</b><small>{mediumPct}%</small>
+            </div>
+            <div className="legend-row normal-row">
+              <i className="legend normal"/><span>Normal / Low</span><b>{normal}</b><small>{normalPct}%</small>
+            </div>
+          </div>
+        </div>
+
+        <div className="recent-table premium-recent-table">
+          <div className="table-title">
+            <span><i className="table-live-dot" /> {activeFilter === "ALL" || activeFilter === "DASHBOARD" ? "Recent Incidents" : `${activeFilter.replaceAll("_", " ")} Results`}</span>
+            <span className="recent-count">{filteredRecent.length} visible</span>
+          </div>
+          {filteredRecent.length ? filteredRecent.map((item) => (
+            <button className={`mini-incident ${item.severity === "CRITICAL" ? "mini-critical" : ""}`} key={item.id} onClick={() => onOpenIncident(item)}>
+              <span>#{item.id}</span>
+              <strong>{item.title}</strong>
+              <em>{item.type}</em>
+              <b className={`mini-severity ${(item.severity || "").toLowerCase()}`}>{item.severity || "NORMAL"}</b>
+              <small>{item.status}</small>
+            </button>
+          )) : (
+            <div className="empty-mini premium-empty">
+              <span className="empty-crosshair">⌁</span>
+              No matching incidents — perimeter monitoring remains active.
+            </div>
+          )}
+        </div>
       </div>
 
-      <div>
+      <div className="soc-panel network-panel">
+        <div className="soc-panel-head">
+          <div>
+            <span className="security-label">LIVE NETWORK ACTIVITY</span>
+            <h2>Global Activity</h2>
+          </div>
+          <span className="live-pill live-packets"><i /> PACKETS FLOWING</span>
+        </div>
 
-        <p>
-          {title}
-        </p>
+        <div className="network-status-line">
+          <span><i /> PERIMETER ONLINE</span>
+          <span>THREAT ENGINE <b>ACTIVE</b></span>
+          <span>LATENCY <b>18ms</b></span>
+        </div>
 
-        <h2>
-          {value}
-        </h2>
+        <div className="network-map">
+          <div className="map-grid" />
+          <svg className="world-map-svg" viewBox="0 0 900 300" aria-hidden="true">
+            <g className="map-continent">
+              <path d="M105 83 L132 65 166 70 187 91 175 110 150 111 137 132 113 123 95 101Z" />
+              <path d="M202 145 L231 131 254 146 249 166 264 191 252 226 230 246 214 220 221 191 205 170Z" />
+              <path d="M410 78 L444 62 482 70 500 91 486 106 451 102 433 119 414 105Z" />
+              <path d="M494 117 L535 111 568 130 589 158 578 185 551 178 534 158 510 153Z" />
+              <path d="M646 104 L680 90 718 101 744 121 731 143 700 139 681 158 654 143Z" />
+              <path d="M706 173 L741 168 768 190 756 213 727 214 709 198Z" />
+            </g>
+            <g className="map-routes">
+              <path d="M151 104 Q335 28 470 91 T709 122" />
+              <path d="M235 151 Q420 225 558 151 T744 193" />
+              <path d="M425 91 Q482 125 550 155" />
+            </g>
+          </svg>
 
+          <span className="node n1"/><span className="node n2"/><span className="node n3"/>
+          <span className="node n4"/><span className="node n5"/>
+          <span className="route r1"/><span className="route r2"/><span className="route r3"/>
+          <div className={`packet p1 packet-${packet % 3}`} />
+          <div className={`packet p2 packet-${(packet + 1) % 3}`} />
+          <div className="packet-label">
+            <b>INCOMING PACKET</b><br/>
+            <span>192.168.1.45 → 103.21</span><br/>
+            <em>TCP 443 / TLS</em>
+          </div>
+          <div className="network-scan-line" />
+          <div className="map-legend">
+            <span><i className="normal-dot"/> Normal</span>
+            <span><i className="warn-dot"/> Suspicious</span>
+            <span><i className="bad-dot"/> Malicious</span>
+          </div>
+        </div>
+
+        <div className="activity-log">
+          <div className="log-head">
+            Network Activity Log <span>● LIVE · {String(packet + 24).padStart(2, "0")} PACKETS</span>
+          </div>
+          {logs.map((log, i) => (
+            <div className={`log-line ${i === 1 ? "warn" : i === 3 ? "cyan" : ""}`} key={`${log}-${i}`}>
+              <time>[{lastPacketTime.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"})}]</time>
+              <span>{log}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-    </div>
+      <div className={`critical-alert ${criticalPulse ? "critical-triggered" : "critical-idle"} ${critical > 0 ? "threat-active" : "threat-clear"}`}>
+        <div className="alert-scan" />
+        <div className="alert-radar"><span>!</span></div>
+        <div className="critical-copy">
+          <div className="critical-kicker">{critical > 0 ? "SECURITY EVENT // PRIORITY 01" : "SECURITY MONITOR // PERIMETER STATUS"}</div>
+          <b>{critical > 0 ? (criticalPulse ? "CRITICAL INTRUSION DETECTED" : "CRITICAL THREAT ACTIVE") : "PERIMETER SECURE — NO CRITICAL INTRUSION"}</b>
+          <span>{critical > 0 ? `${critical} critical incident${critical === 1 ? "" : "s"} require immediate SOC attention.` : "Threat sensors are watching every packet. Awaiting anomalous activity..."}</span>
+        </div>
+        <div className="critical-side-status">
+          <strong>{critical > 0 ? "CRITICAL" : "MONITORING"}</strong>
+          <small>{critical > 0 ? "RESPONSE REQUIRED" : "ALL SYSTEMS WATCHING"}</small>
+        </div>
+      </div>
+    </section>
   );
 }
+
+/* =========================================================
+   APP EXPORT
+========================================================= */
 
 export default App;
