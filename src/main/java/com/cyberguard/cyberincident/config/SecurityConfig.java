@@ -22,7 +22,6 @@ public class SecurityConfig {
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter) {
-
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -34,8 +33,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
                 List.of(
@@ -56,7 +54,18 @@ public class SecurityConfig {
         );
 
         configuration.setAllowedHeaders(
-                List.of("*")
+                List.of(
+                        "Authorization",
+                        "Content-Type",
+                        "Accept",
+                        "Origin"
+                )
+        );
+
+        configuration.setExposedHeaders(
+                List.of(
+                        "Authorization"
+                )
         );
 
         configuration.setAllowCredentials(true);
@@ -77,15 +86,11 @@ public class SecurityConfig {
             HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf ->
-                        csrf.disable()
-                )
+                .csrf(csrf -> csrf.disable())
 
-                .cors(cors ->
-                        cors.configurationSource(
-                                corsConfigurationSource()
-                        )
-                )
+                .cors(cors -> cors.configurationSource(
+                        corsConfigurationSource()
+                ))
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
@@ -95,7 +100,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> {
 
-                    // Authentication endpoints
+                    // Authentication
                     auth.requestMatchers(
                             "/api/auth/**"
                     ).permitAll();
@@ -106,7 +111,7 @@ public class SecurityConfig {
                             "/**"
                     ).permitAll();
 
-                    // Incident creation
+                    // Create incident
                     auth.requestMatchers(
                             HttpMethod.POST,
                             "/api/incidents"
@@ -118,7 +123,7 @@ public class SecurityConfig {
                             "/api/incidents"
                     ).authenticated();
 
-                    // View incidents reported by a specific user
+                    // User incidents
                     auth.requestMatchers(
                             HttpMethod.GET,
                             "/api/incidents/user/**"
@@ -127,31 +132,31 @@ public class SecurityConfig {
                             "ADMIN"
                     );
 
-                    // Update incident status
+                    // Update status
                     auth.requestMatchers(
                             HttpMethod.PUT,
                             "/api/incidents/*/status"
                     ).authenticated();
 
-                    // Assign incident
+                    // Assign
                     auth.requestMatchers(
                             HttpMethod.PUT,
                             "/api/incidents/*/assign"
                     ).hasRole("ADMIN");
 
-                    // Unassign incident
+                    // Unassign
                     auth.requestMatchers(
                             HttpMethod.PUT,
                             "/api/incidents/*/unassign"
                     ).hasRole("ADMIN");
 
-                    // Delete incident
+                    // Delete
                     auth.requestMatchers(
                             HttpMethod.DELETE,
                             "/api/incidents/*"
                     ).hasRole("ADMIN");
 
-                    // Investigation notes
+                    // Notes
                     auth.requestMatchers(
                             HttpMethod.POST,
                             "/api/incidents/*/notes"
@@ -160,7 +165,7 @@ public class SecurityConfig {
                             "ADMIN"
                     );
 
-                    // Evidence upload
+                    // Evidence
                     auth.requestMatchers(
                             HttpMethod.POST,
                             "/api/incidents/*/evidence"
@@ -182,13 +187,12 @@ public class SecurityConfig {
                             "ADMIN"
                     );
 
-                    // Staff users for assignment
+                    // Staff
                     auth.requestMatchers(
                             HttpMethod.GET,
                             "/api/users/staff"
                     ).hasRole("ADMIN");
 
-                    // All other requests require authentication
                     auth.anyRequest().authenticated();
                 })
 
