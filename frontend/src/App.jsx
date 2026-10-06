@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const API = "http://localhost:8080";
+const API = "https://cyberguard-production-4c2c.up.railway.app";
 
 async function getJson(response) {
   const text = await response.text();
