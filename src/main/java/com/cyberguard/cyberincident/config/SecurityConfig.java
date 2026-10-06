@@ -40,6 +40,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173",
+                        "https://cyberguard-sand.vercel.app",
                         "https://cyberguard-alx7cdhq-cyber-guard6.vercel.app"
                 )
         );
@@ -187,8 +188,7 @@ public class SecurityConfig {
                             "/api/users/staff"
                     ).hasRole("ADMIN");
 
-                    // IMPORTANT:
-                    // This is the ONLY anyRequest() in the configuration.
+                    // All other requests require authentication
                     auth.anyRequest().authenticated();
                 })
 
