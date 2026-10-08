@@ -171,6 +171,29 @@ class IncidentLifecycleTest {
     }
 
     @Test
+    void resolvedIncidentCannotBeAssignedAndAuditLogIsOldestFirst() throws Exception {
+        Account reporter = createAccount(Role.USER);
+        Account analyst = createAccount(Role.ANALYST);
+        Account admin = createAccount(Role.ADMIN);
+        long id = createIncident(reporter, "Old laptop theft");
+
+        mockMvc.perform(put("/api/incidents/{id}/status", id)
+                        .param("status", "RESOLVED")
+                        .header("Authorization", analyst.bearer()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/incidents/{id}/assign", id)
+                        .param("userId", String.valueOf(analyst.id))
+                        .header("Authorization", admin.bearer()))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/audit-logs/incident/{id}", id)
+                        .header("Authorization", admin.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("INCIDENT_CREATED"));
+    }
+
+    @Test
     void evidenceUploadDownloadAndAccess() throws Exception {
         Account reporter = createAccount(Role.USER);
         Account stranger = createAccount(Role.USER);

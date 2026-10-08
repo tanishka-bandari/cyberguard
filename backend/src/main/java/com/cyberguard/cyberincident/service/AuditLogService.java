@@ -52,7 +52,7 @@ public class AuditLogService {
         User user = access.currentUser(authentication);
         access.requireStaffOrReporter(user, access.findIncident(incidentId));
 
-        return auditLogRepository.findByIncidentId(incidentId);
+        return auditLogRepository.findByIncidentIdOrderByIdAsc(incidentId);
     }
 
     @Transactional(readOnly = true)

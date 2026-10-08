@@ -152,6 +152,13 @@ public class IncidentService {
                     "Only ANALYST or ADMIN users can be assigned to incidents");
         }
 
+        if (incident.getStatus() == IncidentStatus.RESOLVED
+                || incident.getStatus() == IncidentStatus.CLOSED) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Reopen the incident before assigning it");
+        }
+
         incident.setAssignedTo(assignee);
         incident.setStatus(IncidentStatus.UNDER_INVESTIGATION);
         incident = incidentRepository.save(incident);

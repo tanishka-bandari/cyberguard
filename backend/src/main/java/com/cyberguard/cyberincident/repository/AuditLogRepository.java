@@ -10,7 +10,7 @@ import com.cyberguard.cyberincident.model.AuditLog;
 public interface AuditLogRepository
         extends JpaRepository<AuditLog, Long> {
 
-    List<AuditLog> findByIncidentId(Long incidentId);
+    List<AuditLog> findByIncidentIdOrderByIdAsc(Long incidentId);
 
     List<AuditLog> findAllByOrderByIdDesc(Pageable pageable);
 

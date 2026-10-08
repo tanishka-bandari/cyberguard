@@ -51,7 +51,7 @@ Parameters marked "form" are `application/x-www-form-urlencoded` (or query strin
 | GET | `/api/incidents/user/{userId}` | path | staff | `Incident[]` |
 | POST | `/api/incidents` | form: `title` (1-200), `description` (1-2000), `type`, `severity`, `riskScore` (0-100) | any | `Incident` |
 | PUT | `/api/incidents/{id}/status` | form: `status` | staff | `Incident` |
-| PUT | `/api/incidents/{id}/assign` | form: `userId` (must be ANALYST or ADMIN); sets status to UNDER_INVESTIGATION | ADMIN | `Incident` |
+| PUT | `/api/incidents/{id}/assign` | form: `userId` (must be ANALYST or ADMIN); sets status to UNDER_INVESTIGATION; 400 if the incident is RESOLVED or CLOSED (reopen it first) | ADMIN | `Incident` |
 | PUT | `/api/incidents/{id}/unassign` | none; UNDER_INVESTIGATION returns to REPORTED | ADMIN | `Incident` |
 | DELETE | `/api/incidents/{id}` | none; also removes its notes, evidence (rows and files) and audit entries | ADMIN | 204, no body |
 
