@@ -123,18 +123,19 @@ Enums:
 
 ## Configuration
 
-Set as environment variables (Railway service variables) or in `backend/.env` for local
+Set as environment variables (Render or Railway service variables) or in `backend/.env` for local
 development. See `backend/.env.example`. The app refuses to start when a required value is missing.
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `DATABASE_URL` | yes | JDBC URL, for example `jdbc:mysql://host:3306/cyberincident` |
-| `MYSQLUSER` | yes | Database user |
-| `MYSQLPASSWORD` | yes | Database password |
+| `DATABASE_URL` | yes | JDBC URL. MySQL (`jdbc:mysql://host:3306/cyberincident`) and PostgreSQL (`jdbc:postgresql://host:5432/postgres?sslmode=require`) are supported |
+| `DB_USER` | yes | Database user (the older name `MYSQLUSER` also works) |
+| `DB_PASSWORD` | yes | Database password (the older name `MYSQLPASSWORD` also works) |
 | `JWT_SECRET` | yes | HMAC secret, at least 32 characters (`openssl rand -base64 48`) |
 | `CORS_ALLOWED_ORIGINS` | no | Comma-separated browser origins, default `http://localhost:3000` |
 | `UPLOAD_DIR` | no | Evidence directory, default `uploads/evidence` |
 | `PORT` | no | HTTP port, default `8080` |
+| `DB_POOL_SIZE` | no | Maximum database connections, default `5` (keeps free database tiers happy) |
 
 Run the end-to-end profile with `./mvnw spring-boot:run -Dspring-boot.run.profiles=e2e`. It uses the
 local database `cyberincident_e2e`, recreates the schema on every start and seeds five accounts

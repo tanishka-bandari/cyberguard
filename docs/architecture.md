@@ -322,7 +322,7 @@ The deadline is `reportedAt + allowed time`. An incident is **breached** when it
 - **Token storage:** the JWT is in `localStorage` (see above). Moving to an httpOnly `SameSite` cookie, plus a Content-Security-Policy, is the first hardening step.
 - **No refresh tokens or revocation:** a token is valid for 24 hours; signing out only removes it from the browser. There is no password reset, e-mail verification, account lockout or login rate limiting, and users cannot be deactivated or deleted.
 - **Stale role in the open session:** see section 4.
-- **Evidence on local disk:** files are stored on the backend host. On Railway the disk is wiped on every deploy unless a volume is mounted and `UPLOAD_DIR` points to it (see [deployment.md](deployment.md)). There is no virus scanning and no check of file type or content; files are served back only as attachments.
+- **Evidence on local disk:** files are stored on the backend host. On Render's free plan and on Railway the disk is wiped on every deploy or restart unless a persistent volume is mounted and `UPLOAD_DIR` points to it (see [deployment.md](deployment.md)). There is no virus scanning and no check of file type or content; files are served back only as attachments.
 - **No notifications:** nothing is sent by e-mail or push. Staff see new incidents through polling (toast and banner) while the app is open.
 - **No server-side pagination, filtering or search:** `GET /api/incidents` returns all incidents the user may see; tables paginate in the browser.
 - **Status changes are not validated on the server:** any status can be set from any other, and assigning an already solved incident reopens it.

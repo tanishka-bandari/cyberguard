@@ -34,9 +34,9 @@ Other highlights:
 |---|---|
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Material UI icons, Recharts, SWR |
 | Backend | Spring Boot 4, Java 21, Spring Security, JPA/Hibernate, jjwt |
-| Database | MySQL 8 (H2 in memory for backend tests) |
+| Database | MySQL 8 or PostgreSQL (Supabase); H2 in memory for backend tests |
 | Testing | JUnit and MockMvc (backend), Playwright (end to end) |
-| CI/CD | GitHub Actions, Railway (API), Vercel (frontend) |
+| CI/CD and hosting | GitHub Actions; Render (API), Supabase (database), Vercel (frontend) |
 
 ## Repository layout
 
@@ -69,7 +69,7 @@ cp .env.example .env      # then edit the values, see below
 ./mvnw spring-boot:run    # on Windows cmd/PowerShell: .\mvnw.cmd spring-boot:run
 ```
 
-The API starts on http://localhost:8080. `.env` needs `DATABASE_URL`, `MYSQLUSER`, `MYSQLPASSWORD` and `JWT_SECRET` (at least 32 random characters, for example from `openssl rand -base64 48`). The application refuses to start without them. Optional: `CORS_ALLOWED_ORIGINS`, `UPLOAD_DIR`, `PORT`. Tables are created automatically on first start. All variables are described in the [API reference](docs/api.md#configuration).
+The API starts on http://localhost:8080. `.env` needs `DATABASE_URL`, `DB_USER`, `DB_PASSWORD` and `JWT_SECRET` (at least 32 random characters, for example from `openssl rand -base64 48`). The application refuses to start without them. Optional: `CORS_ALLOWED_ORIGINS`, `UPLOAD_DIR`, `PORT`. Tables are created automatically on first start. All variables are described in the [API reference](docs/api.md#configuration).
 
 ### 3. Frontend
 
@@ -108,13 +108,13 @@ CI runs the backend tests and the frontend lint, type check and build on every p
 - [Architecture](docs/architecture.md): components, authentication flow, authorization matrix, incident lifecycle, design decisions and limitations
 - [Database](docs/database.md): tables, relations, enums and how to reset the database
 - [API reference](docs/api.md): endpoints, roles, response shapes and configuration
-- [Deployment](docs/deployment.md): Railway and Vercel setup
+- [Deployment](docs/deployment.md): step-by-step free hosting with Vercel, Render and Supabase
 - [Testing](docs/testing.md): test layers and how to run them
 - [Contributing](CONTRIBUTING.md)
 
 ## Deployment
 
-The API and its MySQL database run on Railway; the Next.js frontend runs on Vercel. The only frontend setting is `BACKEND_URL`, the public URL of the API. Evidence files are stored on the API host's disk, so a Railway volume is needed to keep them across deploys. The steps are in [docs/deployment.md](docs/deployment.md).
+The frontend runs on Vercel, the API on Render and the database on Supabase, all on free plans. The only frontend setting is `BACKEND_URL`, the public URL of the API. A first-time, step-by-step walkthrough with a troubleshooting table is in [docs/deployment.md](docs/deployment.md). Free-tier limits you should know about (the API sleeps when idle, uploaded evidence files are not kept across restarts) are explained there.
 
 ## License
 
