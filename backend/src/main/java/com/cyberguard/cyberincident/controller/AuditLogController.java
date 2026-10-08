@@ -1,12 +1,18 @@
 package com.cyberguard.cyberincident.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.cyberguard.cyberincident.dto.AuditLogResponseDto;
 import com.cyberguard.cyberincident.model.AuditLog;
 import com.cyberguard.cyberincident.service.AuditLogService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/audit-logs")
@@ -18,34 +24,28 @@ public class AuditLogController {
         this.auditLogService = auditLogService;
     }
 
-    @PostMapping
-    public ResponseEntity<AuditLogResponseDto> createLog(
-            @RequestParam String action,
-            @RequestParam String details,
-            @RequestParam String email,
-            @RequestParam(required = false) Long incidentId) {
-
-        AuditLog log = auditLogService.createLog(
-                action,
-                details,
-                email,
-                incidentId
-        );
-
-        return ResponseEntity.ok(toDto(log));
-    }
-
     @GetMapping("/incident/{incidentId}")
     public ResponseEntity<List<AuditLogResponseDto>> getLogs(
-            @PathVariable Long incidentId) {
+            @PathVariable Long incidentId,
+            Authentication authentication) {
 
-        List<AuditLogResponseDto> logs =
-                auditLogService.getLogsByIncident(incidentId)
+        return ResponseEntity.ok(
+                auditLogService.getLogsByIncident(incidentId, authentication)
                         .stream()
                         .map(AuditLogController::toDto)
-                        .toList();
+                        .toList());
+    }
 
-        return ResponseEntity.ok(logs);
+    @GetMapping("/recent")
+    public ResponseEntity<List<AuditLogResponseDto>> getRecent(
+            @RequestParam(defaultValue = "50") int limit,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(
+                auditLogService.getRecentLogs(limit, authentication)
+                        .stream()
+                        .map(AuditLogController::toDto)
+                        .toList());
     }
 
     private static AuditLogResponseDto toDto(AuditLog log) {

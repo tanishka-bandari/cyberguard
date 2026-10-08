@@ -3,93 +3,56 @@ package com.cyberguard.cyberincident.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cyberguard.cyberincident.model.Role;
-import com.cyberguard.cyberincident.model.User;
-import com.cyberguard.cyberincident.repository.UserRepository;
+import com.cyberguard.cyberincident.dto.UserResponseDto;
+import com.cyberguard.cyberincident.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    // =========================================================
-    // GET STAFF USERS
-    // =========================================================
-    // Returns only ANALYST and ADMIN users.
-    // Used by ADMIN to assign incidents.
-    // =========================================================
-
+    // ANALYST and ADMIN users, used to pick an assignee.
     @GetMapping("/staff")
-    public ResponseEntity<List<UserResponse>> getStaffUsers() {
+    public ResponseEntity<List<UserResponseDto>> getStaffUsers(
+            Authentication authentication) {
 
-        List<UserResponse> staffUsers =
-                userRepository.findAll()
-                        .stream()
-                        .filter(user ->
-                                user.getRole() == Role.ANALYST ||
-                                user.getRole() == Role.ADMIN
-                        )
-                        .map(user ->
-                                new UserResponse(
-                                        user.getId(),
-                                        user.getName(),
-                                        user.getEmail(),
-                                        user.getRole().name()
-                                )
-                        )
-                        .toList();
-
-        return ResponseEntity.ok(staffUsers);
+        return ResponseEntity.ok(
+                userService.getStaffUsers(authentication).stream()
+                        .map(UserResponseDto::from)
+                        .toList());
     }
 
-    // =========================================================
-    // SAFE USER RESPONSE
-    // =========================================================
-    // Password is NEVER sent to frontend.
-    // =========================================================
+    @GetMapping
+    public ResponseEntity<List<UserResponseDto>> getAllUsers(
+            Authentication authentication) {
 
-    public static class UserResponse {
+        return ResponseEntity.ok(
+                userService.getAllUsers(authentication).stream()
+                        .map(UserResponseDto::from)
+                        .toList());
+    }
 
-        private Long id;
-        private String name;
-        private String email;
-        private String role;
+    @PutMapping("/{userId}/role")
+    public ResponseEntity<UserResponseDto> changeRole(
+            @PathVariable Long userId,
+            @RequestParam String role,
+            Authentication authentication) {
 
-        public UserResponse(
-                Long id,
-                String name,
-                String email,
-                String role) {
-
-            this.id = id;
-            this.name = name;
-            this.email = email;
-            this.role = role;
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public String getRole() {
-            return role;
-        }
+        return ResponseEntity.ok(
+                UserResponseDto.from(
+                        userService.changeRole(userId, role, authentication)));
     }
 }

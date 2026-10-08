@@ -30,14 +30,7 @@ public class AuthController {
 
         User user = userService.registerUser(name, email, password);
 
-        UserResponseDto response = new UserResponseDto(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getRole()
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(UserResponseDto.from(user));
     }
 
     @PostMapping("/login")

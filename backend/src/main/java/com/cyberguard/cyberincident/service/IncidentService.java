@@ -3,36 +3,52 @@ package com.cyberguard.cyberincident.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.cyberguard.cyberincident.model.Incident;
 import com.cyberguard.cyberincident.model.IncidentStatus;
 import com.cyberguard.cyberincident.model.IncidentType;
-import com.cyberguard.cyberincident.model.Role;
 import com.cyberguard.cyberincident.model.Severity;
 import com.cyberguard.cyberincident.model.User;
 import com.cyberguard.cyberincident.repository.IncidentRepository;
+import com.cyberguard.cyberincident.repository.InvestigationNoteRepository;
 import com.cyberguard.cyberincident.repository.UserRepository;
 
 @Service
+@Transactional
 public class IncidentService {
+
+    private static final int MAX_TITLE_LENGTH = 200;
+    private static final int MAX_DESCRIPTION_LENGTH = 2000;
 
     private final IncidentRepository incidentRepository;
     private final UserRepository userRepository;
+    private final InvestigationNoteRepository noteRepository;
+    private final EvidenceService evidenceService;
+    private final AuditLogService auditLogService;
+    private final AccessControl access;
 
     public IncidentService(
             IncidentRepository incidentRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            InvestigationNoteRepository noteRepository,
+            EvidenceService evidenceService,
+            AuditLogService auditLogService,
+            AccessControl access) {
 
         this.incidentRepository = incidentRepository;
         this.userRepository = userRepository;
+        this.noteRepository = noteRepository;
+        this.evidenceService = evidenceService;
+        this.auditLogService = auditLogService;
+        this.access = access;
     }
 
-    // =========================================================
-    // CREATE INCIDENT
-    // =========================================================
-
+    // USER can report an incident; the JWT decides who the reporter is.
     public Incident createIncident(
             String title,
             String description,
@@ -42,273 +58,168 @@ public class IncidentService {
             String email) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "User not found"));
+
+        String cleanTitle = requireText(title, "Title", MAX_TITLE_LENGTH);
+        String cleanDescription =
+                requireText(description, "Description", MAX_DESCRIPTION_LENGTH);
+
+        if (riskScore == null || riskScore < 0 || riskScore > 100) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Risk score must be between 0 and 100");
+        }
 
         Incident incident = new Incident();
 
-        incident.setTitle(title);
-        incident.setDescription(description);
-
-        incident.setType(
-                IncidentType.valueOf(type)
-        );
-
-        incident.setSeverity(
-                Severity.valueOf(severity)
-        );
-
+        incident.setTitle(cleanTitle);
+        incident.setDescription(cleanDescription);
+        incident.setType(Enums.parse(IncidentType.class, type, "type"));
+        incident.setSeverity(Enums.parse(Severity.class, severity, "severity"));
         incident.setRiskScore(riskScore);
         incident.setStatus(IncidentStatus.REPORTED);
         incident.setReportedBy(user);
         incident.setReportedAt(LocalDateTime.now());
-
         incident.setAssignedTo(null);
 
-        return incidentRepository.save(incident);
+        incident = incidentRepository.save(incident);
+
+        auditLogService.log(user, incident, "INCIDENT_CREATED",
+                "Reported: " + incident.getTitle());
+
+        return incident;
     }
 
-    // =========================================================
-    // GET INCIDENTS
-    // =========================================================
+    // USER -> own incidents, ANALYST/ADMIN -> all incidents
+    @Transactional(readOnly = true)
+    public List<Incident> getIncidentsForUser(Authentication authentication) {
 
-    // USER → own incidents
-    // ANALYST/ADMIN → all incidents
-    public List<Incident> getIncidentsForUser(
-            Authentication authentication) {
+        User user = access.currentUser(authentication);
 
-        User user = getAuthenticatedUser(authentication);
-
-        if (isStaff(user)) {
+        if (AccessControl.isStaff(user)) {
             return incidentRepository.findAll();
         }
 
         return incidentRepository.findByReportedById(user.getId());
     }
 
-    // =========================================================
-    // GET INCIDENTS BY USER
-    // =========================================================
-
+    @Transactional(readOnly = true)
     public List<Incident> getIncidentsByUser(
             Long userId,
             Authentication authentication) {
 
-        User authenticatedUser =
-                getAuthenticatedUser(authentication);
-
-        if (!isStaff(authenticatedUser)) {
-            throw new RuntimeException(
-                    "Access denied. Only ANALYST or ADMIN can view other users' incidents."
-            );
-        }
+        access.requireStaff(authentication);
 
         return incidentRepository.findByReportedById(userId);
     }
 
-    // =========================================================
-    // UPDATE INCIDENT DETAILS
-    // =========================================================
-
-    // ANALYST/ADMIN → can edit any incident
-    public Incident updateIncident(
-            Long incidentId,
-            String title,
-            String description,
-            String type,
-            String severity,
-            Integer riskScore,
-            Authentication authentication) {
-
-        User authenticatedUser =
-                getAuthenticatedUser(authentication);
-
-        if (!isStaff(authenticatedUser)) {
-            throw new RuntimeException(
-                    "Access denied. Only ANALYST or ADMIN can update incidents."
-            );
-        }
-
-        Incident incident = incidentRepository.findById(incidentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Incident not found"));
-
-        incident.setTitle(title);
-        incident.setDescription(description);
-        incident.setType(IncidentType.valueOf(type));
-        incident.setSeverity(Severity.valueOf(severity));
-        incident.setRiskScore(riskScore);
-
-        return incidentRepository.save(incident);
-    }
-
-    // =========================================================
-    // UPDATE STATUS
-    // =========================================================
-
-    // USER → own incident
-    // ANALYST/ADMIN → any incident
     public Incident updateStatus(
             Long incidentId,
             String status,
             Authentication authentication) {
 
-        User authenticatedUser =
-                getAuthenticatedUser(authentication);
+        User actor = access.requireStaff(authentication);
+        Incident incident = access.findIncident(incidentId);
+        IncidentStatus newStatus =
+                Enums.parse(IncidentStatus.class, status, "status");
 
-        Incident incident = incidentRepository.findById(incidentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Incident not found"));
+        IncidentStatus oldStatus = incident.getStatus();
+        incident.setStatus(newStatus);
+        incident = incidentRepository.save(incident);
 
-        if (!isStaff(authenticatedUser)
-                && !incident.getReportedBy().getId()
-                        .equals(authenticatedUser.getId())) {
+        auditLogService.log(actor, incident, "STATUS_CHANGED",
+                "Status changed from " + oldStatus + " to " + newStatus);
 
-            throw new RuntimeException(
-                    "Access denied. You can update only your own incident."
-            );
-        }
-
-        incident.setStatus(
-                IncidentStatus.valueOf(status)
-        );
-
-        return incidentRepository.save(incident);
+        return incident;
     }
 
-    // =========================================================
-    // ASSIGN INCIDENT
-    // =========================================================
-
-    // ANALYST/ADMIN → can assign
     public Incident assignIncident(
             Long incidentId,
             Long assignedUserId,
             Authentication authentication) {
 
-        User authenticatedUser =
-                getAuthenticatedUser(authentication);
+        User actor = access.requireAdmin(authentication);
+        Incident incident = access.findIncident(incidentId);
 
-        if (!isStaff(authenticatedUser)) {
-            throw new RuntimeException(
-                    "Access denied. Only ANALYST or ADMIN can assign incidents."
-            );
+        User assignee = userRepository.findById(assignedUserId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Assigned user not found"));
+
+        if (!AccessControl.isStaff(assignee)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Only ANALYST or ADMIN users can be assigned to incidents");
         }
 
-        Incident incident = incidentRepository.findById(incidentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Incident not found"));
+        incident.setAssignedTo(assignee);
+        incident.setStatus(IncidentStatus.UNDER_INVESTIGATION);
+        incident = incidentRepository.save(incident);
 
-        User assignedUser = userRepository.findById(assignedUserId)
-                .orElseThrow(() ->
-                        new RuntimeException("Assigned user not found"));
+        auditLogService.log(actor, incident, "INCIDENT_ASSIGNED",
+                "Assigned to " + assignee.getName());
 
-        if (!isStaff(assignedUser)) {
-            throw new RuntimeException(
-                    "Only ANALYST or ADMIN users can be assigned to incidents."
-            );
-        }
-
-        incident.setAssignedTo(assignedUser);
-
-        incident.setStatus(
-                IncidentStatus.UNDER_INVESTIGATION
-        );
-
-        return incidentRepository.save(incident);
+        return incident;
     }
 
-    // =========================================================
-    // UNASSIGN INCIDENT
-    // =========================================================
-
-    // ANALYST/ADMIN → can unassign
     public Incident unassignIncident(
             Long incidentId,
             Authentication authentication) {
 
-        User authenticatedUser =
-                getAuthenticatedUser(authentication);
+        User actor = access.requireAdmin(authentication);
+        Incident incident = access.findIncident(incidentId);
 
-        if (!isStaff(authenticatedUser)) {
-            throw new RuntimeException(
-                    "Access denied. Only ANALYST or ADMIN can unassign incidents."
-            );
-        }
-
-        Incident incident = incidentRepository.findById(incidentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Incident not found"));
-
+        User previous = incident.getAssignedTo();
         incident.setAssignedTo(null);
 
-        if (incident.getStatus()
-                == IncidentStatus.UNDER_INVESTIGATION) {
-
-            incident.setStatus(
-                    IncidentStatus.REPORTED
-            );
+        if (incident.getStatus() == IncidentStatus.UNDER_INVESTIGATION) {
+            incident.setStatus(IncidentStatus.REPORTED);
         }
 
-        return incidentRepository.save(incident);
+        incident = incidentRepository.save(incident);
+
+        auditLogService.log(actor, incident, "INCIDENT_UNASSIGNED",
+                previous != null
+                        ? "Unassigned from " + previous.getName()
+                        : "Assignment cleared");
+
+        return incident;
     }
 
-    // =========================================================
-    // DELETE INCIDENT
-    // =========================================================
-
-    // ANALYST/ADMIN → can delete
+    // Child rows go first; the audit entry for the deletion itself
+    // is written with no incident so it survives.
     public void deleteIncident(
             Long incidentId,
             Authentication authentication) {
 
-        User authenticatedUser =
-                getAuthenticatedUser(authentication);
+        User actor = access.requireAdmin(authentication);
+        Incident incident = access.findIncident(incidentId);
 
-        if (!isStaff(authenticatedUser)) {
-            throw new RuntimeException(
-                    "Access denied. Only ANALYST or ADMIN can delete incidents."
-            );
-        }
+        auditLogService.deleteByIncident(incidentId);
+        noteRepository.deleteByIncidentId(incidentId);
+        evidenceService.deleteByIncident(incidentId);
 
-        Incident incident = incidentRepository.findById(incidentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Incident not found"));
+        auditLogService.log(actor, null, "INCIDENT_DELETED",
+                "#" + incidentId + " " + incident.getTitle());
 
         incidentRepository.delete(incident);
     }
 
-    // =========================================================
-    // AUTHENTICATED USER
-    // =========================================================
+    private static String requireText(String value, String field, int maxLength) {
 
-    private User getAuthenticatedUser(
-            Authentication authentication) {
-
-        if (authentication == null
-                || authentication.getName() == null) {
-
-            throw new RuntimeException(
-                    "User is not authenticated"
-            );
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, field + " is required");
         }
 
-        return userRepository.findByEmail(
-                authentication.getName()
-        ).orElseThrow(() ->
-                new RuntimeException(
-                        "Authenticated user not found"
-                )
-        );
-    }
+        String text = value.trim();
 
-    // =========================================================
-    // ROLE CHECK
-    // =========================================================
+        if (text.length() > maxLength) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    field + " must be at most " + maxLength + " characters");
+        }
 
-    private boolean isStaff(User user) {
-
-        return user.getRole() == Role.ADMIN
-                || user.getRole() == Role.ANALYST;
+        return text;
     }
 }

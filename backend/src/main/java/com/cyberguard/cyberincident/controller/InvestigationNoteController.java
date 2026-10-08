@@ -30,13 +30,13 @@ public class InvestigationNoteController {
     @PostMapping("/{incidentId}/notes")
     public ResponseEntity<InvestigationNoteResponseDto> addNote(
             @PathVariable Long incidentId,
-            @RequestParam String note,
+            @RequestParam String content,
             Authentication authentication) {
 
         InvestigationNote investigationNote =
                 noteService.addNote(
                         incidentId,
-                        note,
+                        content,
                         authentication
                 );
 
@@ -47,10 +47,11 @@ public class InvestigationNoteController {
 
     @GetMapping("/{incidentId}/notes")
     public ResponseEntity<List<InvestigationNoteResponseDto>> getNotes(
-            @PathVariable Long incidentId) {
+            @PathVariable Long incidentId,
+            Authentication authentication) {
 
         List<InvestigationNoteResponseDto> notes =
-                noteService.getNotesByIncident(incidentId)
+                noteService.getNotesByIncident(incidentId, authentication)
                         .stream()
                         .map(InvestigationNoteController::toDto)
                         .toList();

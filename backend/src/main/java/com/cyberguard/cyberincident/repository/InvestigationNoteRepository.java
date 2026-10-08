@@ -10,5 +10,6 @@ public interface InvestigationNoteRepository
         extends JpaRepository<InvestigationNote, Long> {
 
     List<InvestigationNote> findByIncidentId(Long incidentId);
-}
 
+    void deleteByIncidentId(Long incidentId);
+}

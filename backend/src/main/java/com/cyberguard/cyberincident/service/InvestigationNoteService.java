@@ -3,90 +3,79 @@ package com.cyberguard.cyberincident.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.cyberguard.cyberincident.model.Incident;
 import com.cyberguard.cyberincident.model.InvestigationNote;
-import com.cyberguard.cyberincident.model.Role;
 import com.cyberguard.cyberincident.model.User;
-import com.cyberguard.cyberincident.repository.IncidentRepository;
 import com.cyberguard.cyberincident.repository.InvestigationNoteRepository;
-import com.cyberguard.cyberincident.repository.UserRepository;
 
 @Service
+@Transactional
 public class InvestigationNoteService {
 
+    private static final int MAX_NOTE_LENGTH = 2000;
+
     private final InvestigationNoteRepository noteRepository;
-    private final IncidentRepository incidentRepository;
-    private final UserRepository userRepository;
+    private final AccessControl access;
+    private final AuditLogService auditLogService;
 
     public InvestigationNoteService(
             InvestigationNoteRepository noteRepository,
-            IncidentRepository incidentRepository,
-            UserRepository userRepository) {
+            AccessControl access,
+            AuditLogService auditLogService) {
 
         this.noteRepository = noteRepository;
-        this.incidentRepository = incidentRepository;
-        this.userRepository = userRepository;
+        this.access = access;
+        this.auditLogService = auditLogService;
     }
 
     public InvestigationNote addNote(
             Long incidentId,
-            String note,
+            String content,
             Authentication authentication) {
 
-        Incident incident = incidentRepository.findById(incidentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Incident not found"));
+        User user = access.requireStaff(authentication);
+        Incident incident = access.findIncident(incidentId);
 
-        if (authentication == null
-                || authentication.getName() == null) {
-
-            throw new RuntimeException(
-                    "User is not authenticated");
+        if (content == null || content.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Note cannot be empty");
         }
 
-        User user = userRepository.findByEmail(
-                authentication.getName()
-        ).orElseThrow(() ->
-                new RuntimeException("User not found"));
-
-        // Only ANALYST and ADMIN can add investigation notes
-        if (user.getRole() != Role.ANALYST
-                && user.getRole() != Role.ADMIN) {
-
-            throw new RuntimeException(
-                    "Access denied. Only ANALYST or ADMIN can add investigation notes."
-            );
+        if (content.length() > MAX_NOTE_LENGTH) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Note must be at most " + MAX_NOTE_LENGTH + " characters");
         }
 
-        if (note == null || note.trim().isEmpty()) {
+        InvestigationNote note = new InvestigationNote();
 
-            throw new RuntimeException(
-                    "Investigation note cannot be empty");
-        }
+        note.setNote(content);
+        note.setIncident(incident);
+        note.setAddedBy(user);
+        note.setCreatedAt(LocalDateTime.now());
 
-        InvestigationNote investigationNote =
-                new InvestigationNote();
+        note = noteRepository.save(note);
 
-        investigationNote.setNote(note);
-        investigationNote.setIncident(incident);
-        investigationNote.setAddedBy(user);
-        investigationNote.setCreatedAt(
-                LocalDateTime.now()
-        );
+        auditLogService.log(user, incident, "NOTE_ADDED",
+                "Investigation note added");
 
-        return noteRepository.save(
-                investigationNote
-        );
+        return note;
     }
 
+    @Transactional(readOnly = true)
     public List<InvestigationNote> getNotesByIncident(
-            Long incidentId) {
+            Long incidentId,
+            Authentication authentication) {
 
-        return noteRepository.findByIncidentId(
-                incidentId
-        );
+        User user = access.currentUser(authentication);
+        access.requireStaffOrReporter(user, access.findIncident(incidentId));
+
+        return noteRepository.findByIncidentId(incidentId);
     }
 }

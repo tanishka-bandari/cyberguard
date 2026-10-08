@@ -1,63 +1,72 @@
 package com.cyberguard.cyberincident.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.cyberguard.cyberincident.model.AuditLog;
 import com.cyberguard.cyberincident.model.Incident;
 import com.cyberguard.cyberincident.model.User;
 import com.cyberguard.cyberincident.repository.AuditLogRepository;
-import com.cyberguard.cyberincident.repository.IncidentRepository;
-import com.cyberguard.cyberincident.repository.UserRepository;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class AuditLogService {
 
+    private static final int MAX_DETAILS_LENGTH = 255;
+
     private final AuditLogRepository auditLogRepository;
-    private final UserRepository userRepository;
-    private final IncidentRepository incidentRepository;
+    private final AccessControl access;
 
     public AuditLogService(
             AuditLogRepository auditLogRepository,
-            UserRepository userRepository,
-            IncidentRepository incidentRepository) {
+            AccessControl access) {
 
         this.auditLogRepository = auditLogRepository;
-        this.userRepository = userRepository;
-        this.incidentRepository = incidentRepository;
+        this.access = access;
     }
 
-    public AuditLog createLog(
-            String action,
-            String details,
-            String email,
-            Long incidentId) {
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
-
-        Incident incident = null;
-
-        if (incidentId != null) {
-            incident = incidentRepository.findById(incidentId)
-                    .orElseThrow(() ->
-                            new RuntimeException("Incident not found"));
-        }
+    /** Records an action; incident is null for entries that outlive it. */
+    public void log(User user, Incident incident, String action, String details) {
 
         AuditLog log = new AuditLog();
 
-        log.setAction(action);
-        log.setDetails(details);
         log.setUser(user);
         log.setIncident(incident);
+        log.setAction(action);
+        log.setDetails(details.length() > MAX_DETAILS_LENGTH
+                ? details.substring(0, MAX_DETAILS_LENGTH)
+                : details);
         log.setCreatedAt(LocalDateTime.now());
 
-        return auditLogRepository.save(log);
+        auditLogRepository.save(log);
     }
 
-    public List<AuditLog> getLogsByIncident(Long incidentId) {
+    @Transactional(readOnly = true)
+    public List<AuditLog> getLogsByIncident(
+            Long incidentId, Authentication authentication) {
+
+        User user = access.currentUser(authentication);
+        access.requireStaffOrReporter(user, access.findIncident(incidentId));
+
         return auditLogRepository.findByIncidentId(incidentId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditLog> getRecentLogs(int limit, Authentication authentication) {
+
+        access.requireStaff(authentication);
+
+        int size = Math.max(1, Math.min(limit, 200));
+
+        return auditLogRepository.findAllByOrderByIdDesc(
+                PageRequest.of(0, size));
+    }
+
+    public void deleteByIncident(Long incidentId) {
+        auditLogRepository.deleteByIncidentId(incidentId);
     }
 }

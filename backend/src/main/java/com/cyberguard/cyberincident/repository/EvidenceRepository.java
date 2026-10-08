@@ -1,12 +1,14 @@
 package com.cyberguard.cyberincident.repository;
 
-import com.cyberguard.cyberincident.model.Evidence;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import com.cyberguard.cyberincident.model.Evidence;
 
 public interface EvidenceRepository extends JpaRepository<Evidence, Long> {
 
     List<Evidence> findByIncidentId(Long incidentId);
-}
 
+    void deleteByIncidentId(Long incidentId);
+}

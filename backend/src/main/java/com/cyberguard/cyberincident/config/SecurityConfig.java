@@ -1,10 +1,13 @@
 package com.cyberguard.cyberincident.config;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,14 +18,20 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final List<String> allowedOrigins;
 
     public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            @Value("${app.cors.allowed-origins}") List<String> allowedOrigins) {
+
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.allowedOrigins = allowedOrigins;
     }
 
     @Bean
@@ -35,48 +44,24 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-                List.of(
-                        "http://localhost:5173",
-                        "https://cyberguard-sand.vercel.app",
-                        "https://cyberguard-alx7cdhq-cyber-guard6.vercel.app"
-                )
-        );
+        configuration.setAllowedOrigins(allowedOrigins);
 
         configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"
-                )
-        );
+                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
         configuration.setAllowedHeaders(
-                List.of(
-                        "Authorization",
-                        "Content-Type",
-                        "Accept",
-                        "Origin"
-                )
-        );
+                List.of("Authorization", "Content-Type", "Accept", "Origin"));
 
+        // The frontend reads the download file name from Content-Disposition.
         configuration.setExposedHeaders(
-                List.of(
-                        "Authorization"
-                )
-        );
+                List.of("Authorization", "Content-Disposition"));
 
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }
@@ -98,100 +83,48 @@ public class SecurityConfig {
                         )
                 )
 
+                // Missing or expired token -> 401, wrong role -> 403.
+                .exceptionHandling(errors -> errors
+                        .authenticationEntryPoint((request, response, e) ->
+                                writeError(response, 401,
+                                        "Authentication required"))
+                        .accessDeniedHandler((request, response, e) ->
+                                writeError(response, 403, "Access denied"))
+                )
+
+                // Role-only rules live here. Rules that depend on who
+                // reported an incident are checked in the services.
                 .authorizeHttpRequests(auth -> {
 
-                    // Authentication
-                    auth.requestMatchers(
-                            "/api/auth/**"
-                    ).permitAll();
+                    auth.requestMatchers("/api/auth/**").permitAll();
 
-                    // CORS preflight
-                    auth.requestMatchers(
-                            HttpMethod.OPTIONS,
-                            "/**"
-                    ).permitAll();
+                    auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
 
-                    // Create incident
-                    auth.requestMatchers(
-                            HttpMethod.POST,
-                            "/api/incidents"
-                    ).authenticated();
+                    auth.requestMatchers(HttpMethod.GET, "/api/incidents/user/**")
+                            .hasAnyRole("ANALYST", "ADMIN");
 
-                    // View incidents
-                    auth.requestMatchers(
-                            HttpMethod.GET,
-                            "/api/incidents"
-                    ).authenticated();
+                    auth.requestMatchers(HttpMethod.PUT, "/api/incidents/*/status")
+                            .hasAnyRole("ANALYST", "ADMIN");
 
-                    // User incidents
-                    auth.requestMatchers(
-                            HttpMethod.GET,
-                            "/api/incidents/user/**"
-                    ).hasAnyRole(
-                            "ANALYST",
-                            "ADMIN"
-                    );
+                    auth.requestMatchers(HttpMethod.PUT,
+                            "/api/incidents/*/assign",
+                            "/api/incidents/*/unassign")
+                            .hasRole("ADMIN");
 
-                    // Update status
-                    auth.requestMatchers(
-                            HttpMethod.PUT,
-                            "/api/incidents/*/status"
-                    ).authenticated();
+                    auth.requestMatchers(HttpMethod.DELETE, "/api/incidents/*")
+                            .hasRole("ADMIN");
 
-                    // Assign
-                    auth.requestMatchers(
-                            HttpMethod.PUT,
-                            "/api/incidents/*/assign"
-                    ).hasRole("ADMIN");
+                    auth.requestMatchers(HttpMethod.POST, "/api/incidents/*/notes")
+                            .hasAnyRole("ANALYST", "ADMIN");
 
-                    // Unassign
-                    auth.requestMatchers(
-                            HttpMethod.PUT,
-                            "/api/incidents/*/unassign"
-                    ).hasRole("ADMIN");
+                    auth.requestMatchers("/api/dashboard", "/api/audit-logs/recent")
+                            .hasAnyRole("ANALYST", "ADMIN");
 
-                    // Delete
-                    auth.requestMatchers(
-                            HttpMethod.DELETE,
-                            "/api/incidents/*"
-                    ).hasRole("ADMIN");
+                    auth.requestMatchers(HttpMethod.GET, "/api/users/staff")
+                            .hasAnyRole("ANALYST", "ADMIN");
 
-                    // Notes
-                    auth.requestMatchers(
-                            HttpMethod.POST,
-                            "/api/incidents/*/notes"
-                    ).hasAnyRole(
-                            "ANALYST",
-                            "ADMIN"
-                    );
-
-                    // Evidence
-                    auth.requestMatchers(
-                            HttpMethod.POST,
-                            "/api/incidents/*/evidence"
-                    ).hasAnyRole(
-                            "ANALYST",
-                            "ADMIN"
-                    );
-
-                    // Dashboard
-                    auth.requestMatchers(
-                            "/api/dashboard"
-                    ).authenticated();
-
-                    // Audit logs
-                    auth.requestMatchers(
-                            "/api/audit-logs/**"
-                    ).hasAnyRole(
-                            "ANALYST",
-                            "ADMIN"
-                    );
-
-                    // Staff
-                    auth.requestMatchers(
-                            HttpMethod.GET,
-                            "/api/users/staff"
-                    ).hasRole("ADMIN");
+                    auth.requestMatchers("/api/users", "/api/users/**")
+                            .hasRole("ADMIN");
 
                     auth.anyRequest().authenticated();
                 })
@@ -202,5 +135,16 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    private static void writeError(
+            HttpServletResponse response,
+            int status,
+            String message) throws IOException {
+
+        response.setStatus(status);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write(
+                "{\"status\":" + status + ",\"message\":\"" + message + "\"}");
     }
 }
