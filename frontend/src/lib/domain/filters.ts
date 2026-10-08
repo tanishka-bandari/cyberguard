@@ -53,6 +53,18 @@ export function parseFilters(params: URLSearchParams): IncidentFilters {
   };
 }
 
+// A copy of the params with the patched filters set; null, undefined and "" remove the key.
+export function applyFilterPatch(params: URLSearchParams, patch: Partial<IncidentFilters>): URLSearchParams {
+  const next = new URLSearchParams(params);
+  for (const key of FILTER_KEYS) {
+    if (!(key in patch)) continue;
+    const value = patch[key];
+    if (value === null || value === undefined || value === "") next.delete(key);
+    else next.set(key, String(value));
+  }
+  return next;
+}
+
 export const hasActiveFilters = (filters: IncidentFilters) =>
   FILTER_KEYS.some((key) => filters[key] !== EMPTY_FILTERS[key]);
 

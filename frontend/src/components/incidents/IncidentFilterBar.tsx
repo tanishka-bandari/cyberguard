@@ -18,6 +18,8 @@ import {
 } from "@/lib/domain/incident";
 import type { IncidentType } from "@/types/domain";
 
+const QUERY_DEBOUNCE_MS = 250;
+
 const RANGE_LABEL: Record<Range, string> = { "24h": "Last 24 hours", "7d": "Last 7 days", "30d": "Last 30 days" };
 
 const SEVERITY_OPTIONS = SEVERITIES.map((s) => ({ value: s, label: SEVERITY_LABEL[s] }));
@@ -35,21 +37,38 @@ interface IncidentFilterBarProps {
 export function IncidentFilterBar({ filters, onChange, onClear, isFiltered, shown, total }: IncidentFilterBarProps) {
   const { user } = useSession();
 
-  // The box keeps its own text so typing never waits for the URL round trip;
-  // it only adopts the URL value when something else (clear, global search) changed it.
+  // The box keeps its own text and writes it to the URL after a pause. A URL value we
+  // wrote ourselves is ignored when it arrives late; anything else (clear, global
+  // search) replaces the text.
   const [query, setQuery] = useState(filters.q);
-  const typed = useRef(filters.q);
+  const pushed = useRef<string[]>([]);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const latest = useRef({ onChange, q: filters.q });
   useEffect(() => {
-    if (filters.q !== typed.current) {
-      typed.current = filters.q;
-      setQuery(filters.q);
+    latest.current = { onChange, q: filters.q };
+  });
+
+  useEffect(() => {
+    const own = pushed.current.indexOf(filters.q);
+    if (own >= 0) {
+      pushed.current.splice(0, own + 1);
+      return;
     }
+    pushed.current = [];
+    clearTimeout(timer.current);
+    setQuery(filters.q);
   }, [filters.q]);
 
+  useEffect(() => () => clearTimeout(timer.current), []);
+
   const handleQuery = (value: string) => {
-    typed.current = value;
     setQuery(value);
-    onChange({ q: value });
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      if (value === latest.current.q) return;
+      pushed.current.push(value);
+      latest.current.onChange({ q: value });
+    }, QUERY_DEBOUNCE_MS);
   };
 
   const assigneeOptions = [

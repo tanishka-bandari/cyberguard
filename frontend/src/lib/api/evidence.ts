@@ -28,5 +28,6 @@ export async function downloadEvidence(item: Evidence): Promise<void> {
   document.body.append(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  // Some browsers start the save asynchronously, so keep the URL alive for a moment.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

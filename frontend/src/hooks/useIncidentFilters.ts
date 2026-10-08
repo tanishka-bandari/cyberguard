@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   EMPTY_FILTERS,
-  FILTER_KEYS,
+  applyFilterPatch,
   filterIncidents,
   hasActiveFilters,
   parseFilters,
@@ -22,13 +22,7 @@ export function useIncidentFilters() {
 
   const setFilters = useCallback(
     (patch: Partial<IncidentFilters>) => {
-      const next = new URLSearchParams(params.toString());
-      for (const key of FILTER_KEYS) {
-        if (!(key in patch)) continue;
-        const value = patch[key];
-        if (value === null || value === undefined || value === "") next.delete(key);
-        else next.set(key, String(value));
-      }
+      const next = applyFilterPatch(params, patch);
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },

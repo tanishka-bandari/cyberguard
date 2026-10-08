@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSWRConfig } from "swr";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -38,22 +38,72 @@ export function UsersTable() {
   const [savingId, setSavingId] = useState<number | null>(null);
   const [confirming, setConfirming] = useState<RoleChange | null>(null);
 
-  async function apply({ user, role }: RoleChange) {
-    setConfirming(null);
-    setSavingId(user.id);
-    try {
-      await changeRole(user.id, role);
-      toast.success(`${user.name} is now ${ROLE_LABEL[role].toLowerCase()}`);
-      await Promise.all([refresh(USERS_KEY), refresh(STAFF_KEY)]);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : `Could not change the role of ${user.name}`);
-    } finally {
-      setSavingId(null);
-    }
-  }
+  const apply = useCallback(
+    async ({ user, role }: RoleChange) => {
+      setConfirming(null);
+      setSavingId(user.id);
+      try {
+        await changeRole(user.id, role);
+        toast.success(`${user.name} is now ${ROLE_LABEL[role].toLowerCase()}`);
+        await Promise.all([refresh(USERS_KEY), refresh(STAFF_KEY)]);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : `Could not change the role of ${user.name}`);
+      } finally {
+        setSavingId(null);
+      }
+    },
+    [refresh],
+  );
 
   // Promoting to admin grants full control, so it asks first.
-  const requestChange = (change: RoleChange) => (change.role === "ADMIN" ? setConfirming(change) : void apply(change));
+  const requestChange = useCallback(
+    (change: RoleChange) => (change.role === "ADMIN" ? setConfirming(change) : void apply(change)),
+    [apply],
+  );
+
+  const columns = useMemo<Column<User>[]>(
+    () => [
+      { key: "name", header: "Name", sortValue: (u) => u.name.toLowerCase(), cell: (u) => <span className="font-medium">{u.name}</span> },
+      { key: "email", header: "Email", sortValue: (u) => u.email.toLowerCase(), cell: (u) => u.email },
+      {
+        key: "role",
+        header: "Role",
+        sortValue: (u) => ROLES.indexOf(u.role),
+        cell: (u) => <Badge tone={ROLE_TONE[u.role]}>{ROLE_LABEL[u.role]}</Badge>,
+      },
+      {
+        key: "change",
+        header: "Change role",
+        cell: (u) => {
+          const isSelf = u.id === me?.id;
+          return (
+            <div>
+              <select
+                aria-label={`Role for ${u.name}`}
+                aria-describedby={isSelf ? `self-role-${u.id}` : undefined}
+                value={u.role}
+                disabled={isSelf || savingId === u.id}
+                onChange={(e) => requestChange({ user: u, role: e.target.value as Role })}
+                className={cn(controlClass, "h-9 w-36")}
+              >
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_LABEL[r]}
+                  </option>
+                ))}
+              </select>
+              {isSelf && (
+                <p id={`self-role-${u.id}`} className="mt-1 text-xs text-muted">
+                  You cannot change your own role.
+                </p>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [me?.id, savingId, requestChange],
+  );
 
   if (!can(me, "users:manage")) return null;
   if (error) return <ErrorState error={error} onRetry={() => void mutate()} />;
@@ -73,47 +123,6 @@ export function UsersTable() {
   const rows = needle
     ? users.filter((u) => u.name.toLowerCase().includes(needle) || u.email.toLowerCase().includes(needle))
     : users;
-
-  const columns: Column<User>[] = [
-    { key: "name", header: "Name", sortValue: (u) => u.name.toLowerCase(), cell: (u) => <span className="font-medium">{u.name}</span> },
-    { key: "email", header: "Email", sortValue: (u) => u.email.toLowerCase(), cell: (u) => u.email },
-    {
-      key: "role",
-      header: "Role",
-      sortValue: (u) => ROLES.indexOf(u.role),
-      cell: (u) => <Badge tone={ROLE_TONE[u.role]}>{ROLE_LABEL[u.role]}</Badge>,
-    },
-    {
-      key: "change",
-      header: "Change role",
-      cell: (u) => {
-        const isSelf = u.id === me?.id;
-        return (
-          <div>
-            <select
-              aria-label={`Role for ${u.name}`}
-              aria-describedby={isSelf ? `self-role-${u.id}` : undefined}
-              value={u.role}
-              disabled={isSelf || savingId === u.id}
-              onChange={(e) => requestChange({ user: u, role: e.target.value as Role })}
-              className={cn(controlClass, "h-9 w-36")}
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {ROLE_LABEL[r]}
-                </option>
-              ))}
-            </select>
-            {isSelf && (
-              <p id={`self-role-${u.id}`} className="mt-1 text-xs text-muted">
-                You cannot change your own role.
-              </p>
-            )}
-          </div>
-        );
-      },
-    },
-  ];
 
   return (
     <div className="space-y-4">

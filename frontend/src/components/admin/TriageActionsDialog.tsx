@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Select } from "@/components/ui/Select";
-import { STATUSES, STATUS_LABEL, isOpen } from "@/lib/domain/incident";
+import { STATUSES, STATUS_LABEL, canMoveTo, isAssignable } from "@/lib/domain/incident";
 import type { Incident, IncidentStatus, User } from "@/types/domain";
 
 interface TriageActionsDialogProps {
@@ -39,9 +39,14 @@ function ActionsForm({ incident, staff, canMove, canAssign, onClose, onMove, onA
       {canMove && (
         <div className="flex items-end gap-2">
           <div className="flex-1">
-            <Select label="Move to" value={status} onChange={(e) => setStatus(e.target.value as IncidentStatus)}>
+            <Select
+              label="Move to"
+              value={status}
+              hint={incident.assignee ? undefined : "Assign someone first to use Assigned, Under investigation or Contained."}
+              onChange={(e) => setStatus(e.target.value as IncidentStatus)}
+            >
               {STATUSES.map((s) => (
-                <option key={s} value={s}>
+                <option key={s} value={s} disabled={!canMoveTo(incident, s)}>
                   {STATUS_LABEL[s]}
                 </option>
               ))}
@@ -60,7 +65,11 @@ function ActionsForm({ incident, staff, canMove, canAssign, onClose, onMove, onA
         </div>
       )}
 
-      {canAssign && isOpen(incident) && (
+      {canAssign && !isAssignable(incident) && (
+        <p className="text-sm text-muted">Reopen this incident first to change the assignee.</p>
+      )}
+
+      {canAssign && isAssignable(incident) && (
         <div className="space-y-2">
           <div className="flex items-end gap-2">
             <div className="flex-1">

@@ -10,8 +10,6 @@ import type { Incident, IncidentStatus, IncidentType, Severity, User } from "@/t
 // Policy: a staff member with this many open incidents counts as overloaded.
 export const OVERLOADED_OPEN = 4;
 
-const DAY_MS = 86_400_000;
-
 export function countBy<T, K extends string>(items: readonly T[], key: (item: T) => K) {
   const counts: Partial<Record<K, number>> = {};
   for (const item of items) counts[key(item)] = (counts[key(item)] ?? 0) + 1;
@@ -30,10 +28,11 @@ export const slaBreaches = (incidents: readonly Incident[], now: Date) =>
 export const msUntilBreach = (incident: Incident, now: Date) =>
   slaDeadline(incident).getTime() - now.getTime();
 
-// days === null means no limit.
+// The last `days` local calendar days including today, i.e. exactly the days bucketByDay shows,
+// so chart totals match the counts. days === null means no limit.
 export function reportedWithin(incidents: readonly Incident[], days: number | null, now: Date) {
   if (days === null) return [...incidents];
-  const since = now.getTime() - days * DAY_MS;
+  const since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1)).getTime();
   return incidents.filter((i) => i.reportedAt.getTime() >= since);
 }
 

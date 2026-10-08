@@ -92,8 +92,33 @@ export const SLA_HOURS: Record<Severity, number> = {
   LOW: 168,
 };
 
+// Limits of the report form, matching the backend validation.
+export const TITLE_MAX = 200;
+export const DESCRIPTION_MAX = 2000;
+
+// Risk score a new report starts with, before the reporter adjusts it.
+export const DEFAULT_RISK_SCORE: Record<Severity, number> = { LOW: 20, MEDIUM: 45, HIGH: 70, CRITICAL: 90 };
+
 export const isOpen = (incident: Pick<Incident, "status">) =>
   STATUS_GROUP[incident.status] !== "solved";
+
+// The backend only accepts these statuses for an incident that has an assignee.
+const NEEDS_ASSIGNEE: readonly IncidentStatus[] = ["ASSIGNED", "UNDER_INVESTIGATION", "CONTAINED"];
+
+export const needsAssignee = (status: IncidentStatus) => NEEDS_ASSIGNEE.includes(status);
+
+export const canMoveTo = (incident: Pick<Incident, "assignee">, status: IncidentStatus) =>
+  !needsAssignee(status) || incident.assignee !== null;
+
+// Solved incidents must be reopened before they can get an assignee.
+export const isAssignable = (incident: Pick<Incident, "status">) => isOpen(incident);
+
+// What the backend does to the status when the assignee changes.
+export const statusAfterAssign = (status: IncidentStatus): IncidentStatus =>
+  status === "REPORTED" || status === "TRIAGED" || status === "ASSIGNED" ? "UNDER_INVESTIGATION" : status;
+
+export const statusAfterUnassign = (status: IncidentStatus): IncidentStatus =>
+  needsAssignee(status) ? "REPORTED" : status;
 
 export const progressOf = (incident: Pick<Incident, "status">) => STATUS_PROGRESS[incident.status];
 

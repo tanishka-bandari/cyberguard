@@ -21,6 +21,8 @@ import { STATUS_LABEL, TYPE_LABEL } from "@/lib/domain/incident";
 import { bucketByDay, byType, openByStatus, reportedWithin } from "@/lib/domain/stats";
 import type { IncidentStatus, IncidentType } from "@/types/domain";
 
+const ALL_TIME_CHART_DAYS = 90;
+
 const hrefFor = (incident: { id: number }) => `/incidents/${incident.id}`;
 
 export function DashboardView() {
@@ -30,9 +32,10 @@ export function DashboardView() {
   const view = useDashboardFilters();
   const { filters, range, update, matches, isFiltered, clear } = view;
 
+  const chartDays = range.days ?? ALL_TIME_CHART_DAYS;
   const inRange = useMemo(() => reportedWithin(data ?? [], range.days, now), [data, range.days, now]);
   const filtered = useMemo(() => matches(inRange), [matches, inRange]);
-  const buckets = useMemo(() => bucketByDay(filtered, range.days ?? 90, now), [filtered, range.days, now]);
+  const buckets = useMemo(() => bucketByDay(filtered, chartDays, now), [filtered, chartDays, now]);
   const statusData = useMemo(
     () => openByStatus(filtered).map((s) => ({ key: s.status, label: STATUS_LABEL[s.status], value: s.count })),
     [filtered],
@@ -63,7 +66,11 @@ export function DashboardView() {
           <Card>{noMatches}</Card>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card title={`Reported per day, ${range.days ? `last ${range.days} days` : "last 90 days"}`} className="lg:col-span-2">
+            <Card
+              title={`Reported per day, last ${chartDays} days`}
+              action={range.days === null ? <span className="text-xs text-muted">The rest of the page covers all time</span> : undefined}
+              className="lg:col-span-2"
+            >
               <IncidentsPerDayChart
                 buckets={buckets}
                 selected={filters.severity}

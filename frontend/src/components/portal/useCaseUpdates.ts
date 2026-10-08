@@ -3,7 +3,6 @@
 import useSWR from "swr";
 import { describeUpdate } from "@/components/portal/caseUpdates";
 import { useAuthedKey } from "@/hooks/useAuthedKey";
-import { INCIDENTS_REFRESH_MS } from "@/hooks/useIncidents";
 import { listIncidentAudit } from "@/lib/api/audit";
 
 export interface CaseUpdate {
@@ -14,6 +13,8 @@ export interface CaseUpdate {
 }
 
 const MAX_UPDATES = 6;
+// Slower than the incident list because every refresh costs one request per case.
+const REFRESH_MS = 60_000;
 
 async function fetchUpdates(incidentIds: number[]): Promise<CaseUpdate[]> {
   const logs = await Promise.all(incidentIds.map((id) => listIncidentAudit(id)));
@@ -32,5 +33,5 @@ async function fetchUpdates(incidentIds: number[]): Promise<CaseUpdate[]> {
 // One request per case, merged into a single newest-first feed.
 export function useCaseUpdates(incidentIds: number[]) {
   const key = useAuthedKey(incidentIds.length ? `/portal/updates/${incidentIds.join(",")}` : null);
-  return useSWR(key, () => fetchUpdates(incidentIds), { refreshInterval: INCIDENTS_REFRESH_MS });
+  return useSWR(key, () => fetchUpdates(incidentIds), { refreshInterval: REFRESH_MS });
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TriageCard } from "@/components/admin/TriageCard";
 import { cn } from "@/lib/cn";
-import { STATUS_LABEL } from "@/lib/domain/incident";
+import { STATUS_LABEL, canMoveTo } from "@/lib/domain/incident";
 import type { Incident, IncidentStatus } from "@/types/domain";
 
 interface TriageColumnProps {
@@ -30,7 +30,7 @@ export function TriageColumn({
   onOpenActions,
 }: TriageColumnProps) {
   const [isOver, setIsOver] = useState(false);
-  const isTarget = canMove && !!dragging && dragging.status !== status;
+  const isTarget = canMove && !!dragging && dragging.status !== status && canMoveTo(dragging, status);
 
   return (
     <section

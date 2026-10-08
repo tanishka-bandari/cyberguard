@@ -1,8 +1,8 @@
 import { FilePicker } from "@/components/portal/FilePicker";
-import { DESCRIPTION_MAX, TITLE_MAX } from "@/components/portal/reportOptions";
 import type { DraftErrors, ReportDraft } from "@/components/portal/reportDraft";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
+import { DESCRIPTION_MAX, TITLE_MAX } from "@/lib/domain/incident";
 
 interface DetailsStepProps {
   draft: ReportDraft;

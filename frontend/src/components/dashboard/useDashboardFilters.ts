@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { EMPTY_FILTERS, FILTER_KEYS, filterIncidents, parseFilters, type IncidentFilters } from "@/lib/domain/filters";
+import { EMPTY_FILTERS, FILTER_KEYS, applyFilterPatch, filterIncidents, parseFilters, type IncidentFilters } from "@/lib/domain/filters";
 import { STATUS_GROUPS, isOpen, type StatusGroup } from "@/lib/domain/incident";
 import type { Incident } from "@/types/domain";
 
@@ -37,22 +37,17 @@ export function useDashboardFilters() {
 
   const update = useCallback(
     (patch: DashboardPatch) => {
-      const next = new URLSearchParams(query);
-      for (const key of FILTER_KEYS) {
-        if (key === "range" || !(key in patch)) continue;
-        const value = patch[key];
-        if (value === null || value === undefined || value === "") next.delete(key);
-        else next.set(key, String(value));
-      }
-      if (patch.range) next.set("range", patch.range);
-      if (patch.open !== undefined) {
-        if (patch.open) next.set("open", "1");
+      const { range: nextRange, open, ...filterPatch } = patch;
+      const next = applyFilterPatch(params, filterPatch);
+      if (nextRange) next.set("range", nextRange);
+      if (open !== undefined) {
+        if (open) next.set("open", "1");
         else next.delete("open");
       }
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [query, pathname, router],
+    [params, pathname, router],
   );
 
   const setScope = useCallback(

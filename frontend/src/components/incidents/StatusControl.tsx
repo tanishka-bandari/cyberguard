@@ -1,8 +1,7 @@
-import { StatusSteps } from "@/components/incidents/StatusSteps";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StatusStepper } from "@/components/ui/StatusStepper";
-import { isOpen } from "@/lib/domain/incident";
+import { canMoveTo, isOpen } from "@/lib/domain/incident";
 import type { Incident, IncidentStatus } from "@/types/domain";
 
 interface QuickAction {
@@ -49,9 +48,18 @@ export function StatusControl({ incident, editable, busy, onChange }: StatusCont
   const reopenTarget: IncidentStatus = incident.assignee ? "UNDER_INVESTIGATION" : "REPORTED";
   return (
     <Card title="Status">
-      <StatusSteps status={incident.status} onSelect={onChange} disabled={busy} />
+      <StatusStepper
+        status={incident.status}
+        onSelect={onChange}
+        disabled={(step) => busy || !canMoveTo(incident, step)}
+      />
+      {!incident.assignee && (
+        <p className="mt-2 text-xs text-muted">
+          Assign someone first: Assigned, Under investigation and Contained need an assignee.
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
-        {QUICK_ACTIONS.filter((a) => a.visible(incident)).map((a) => (
+        {QUICK_ACTIONS.filter((a) => a.visible(incident) && canMoveTo(incident, a.target)).map((a) => (
           <Button key={a.label} size="sm" variant={a.variant} disabled={busy} onClick={() => onChange(a.target)}>
             {a.label}
           </Button>

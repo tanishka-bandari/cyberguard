@@ -9,15 +9,17 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { INCIDENTS_KEY } from "@/hooks/useIncidents";
 import { createIncident } from "@/lib/api/incidents";
-import { INCIDENT_TYPES, SEVERITIES, SEVERITY_LABEL, TYPE_LABEL } from "@/lib/domain/incident";
+import {
+  DEFAULT_RISK_SCORE,
+  DESCRIPTION_MAX,
+  INCIDENT_TYPES,
+  SEVERITIES,
+  SEVERITY_LABEL,
+  TITLE_MAX,
+  TYPE_LABEL,
+} from "@/lib/domain/incident";
 import { toast } from "@/lib/toast";
 import type { Incident, IncidentType, Severity } from "@/types/domain";
-
-const TITLE_MAX = 200;
-const DESCRIPTION_MAX = 2000;
-
-// Midpoints of the bands used by riskLevel(), so the default risk matches the chosen severity.
-const DEFAULT_RISK: Record<Severity, number> = { LOW: 15, MEDIUM: 40, HIGH: 65, CRITICAL: 90 };
 
 interface ReportFormProps {
   onCreated: (incident: Incident) => void;
@@ -35,7 +37,7 @@ export function ReportForm({ onCreated, onCancel }: ReportFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const riskScore = risk ?? DEFAULT_RISK[severity];
+  const riskScore = risk ?? DEFAULT_RISK_SCORE[severity];
   const titleError = !title.trim() ? "Enter a title" : undefined;
   const descriptionError = !description.trim() ? "Describe what happened" : undefined;
 

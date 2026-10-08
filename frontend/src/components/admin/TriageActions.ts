@@ -3,7 +3,7 @@
 import { useSWRConfig } from "swr";
 import { INCIDENTS_KEY } from "@/hooks/useIncidents";
 import { assignIncident, unassignIncident, updateStatus } from "@/lib/api/incidents";
-import { STATUS_LABEL } from "@/lib/domain/incident";
+import { STATUS_LABEL, statusAfterAssign, statusAfterUnassign } from "@/lib/domain/incident";
 import { toast } from "@/lib/toast";
 import type { Incident, IncidentStatus, Person } from "@/types/domain";
 
@@ -42,24 +42,18 @@ export function useTriageActions() {
         `#${incident.id} moved to ${STATUS_LABEL[status]}`,
       ),
 
-    // The backend puts an assigned incident under investigation.
     assign: (incident: Incident, person: Person) =>
       run(
         incident,
-        { ...incident, assignee: person, status: "UNDER_INVESTIGATION" },
+        { ...incident, assignee: person, status: statusAfterAssign(incident.status) },
         assignIncident(incident.id, person.id),
         `#${incident.id} assigned to ${person.name}`,
       ),
 
-    // The backend returns an incident under investigation to Reported.
     unassign: (incident: Incident) =>
       run(
         incident,
-        {
-          ...incident,
-          assignee: null,
-          status: incident.status === "UNDER_INVESTIGATION" ? "REPORTED" : incident.status,
-        },
+        { ...incident, assignee: null, status: statusAfterUnassign(incident.status) },
         unassignIncident(incident.id),
         `#${incident.id} unassigned`,
       ),

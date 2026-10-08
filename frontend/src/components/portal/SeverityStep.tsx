@@ -2,7 +2,7 @@ import { OptionCard } from "@/components/portal/OptionCard";
 import { SEVERITY_OPTIONS } from "@/components/portal/reportOptions";
 import { RiskMeter } from "@/components/ui/RiskMeter";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
-import { SEVERITY_LABEL, riskLevel } from "@/lib/domain/incident";
+import { DEFAULT_RISK_SCORE, SEVERITY_LABEL, riskLevel } from "@/lib/domain/incident";
 import type { Severity } from "@/types/domain";
 
 interface SeverityStepProps {
@@ -25,7 +25,7 @@ export function SeverityStep({ severity, riskScore, error, onSeverity, onRiskSco
               name="severity"
               value={option.value}
               checked={severity === option.value}
-              onSelect={() => onSeverity(option.value, option.riskScore)}
+              onSelect={() => onSeverity(option.value, DEFAULT_RISK_SCORE[option.value])}
             >
               <span>
                 <SeverityBadge severity={option.value} />

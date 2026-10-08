@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
-import { isOpen } from "@/lib/domain/incident";
+import { isAssignable, isOpen } from "@/lib/domain/incident";
 import type { Incident, User } from "@/types/domain";
 
 interface StaffDockProps {
@@ -20,7 +20,7 @@ export function StaffDock({ staff, incidents, dragging, canAssign, onDrop }: Sta
     <ul className="flex gap-2 overflow-x-auto pb-1">
       {staff.map((person) => {
         const isTarget =
-          canAssign && !!dragging && isOpen(dragging) && dragging.assignee?.id !== person.id;
+          canAssign && !!dragging && isAssignable(dragging) && dragging.assignee?.id !== person.id;
         return (
           <li
             key={person.id}

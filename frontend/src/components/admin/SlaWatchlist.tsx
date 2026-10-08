@@ -3,6 +3,7 @@ import Schedule from "@mui/icons-material/Schedule";
 import WarningAmber from "@mui/icons-material/WarningAmber";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
+import { formatDuration } from "@/lib/format";
 import { SLA_HOURS } from "@/lib/domain/incident";
 import { msUntilBreach, openIncidents } from "@/lib/domain/stats";
 import { cn } from "@/lib/cn";
@@ -10,14 +11,6 @@ import type { Incident } from "@/types/domain";
 
 const LIMIT = 8;
 const HOUR_MS = 3_600_000;
-
-function formatDuration(ms: number) {
-  const minutes = Math.floor(Math.abs(ms) / 60_000);
-  const days = Math.floor(minutes / 1440);
-  const hours = Math.floor((minutes % 1440) / 60);
-  if (days) return `${days}d ${hours}h`;
-  return hours ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
-}
 
 function Timer({ left }: { left: number }) {
   const overdue = left < 0;
