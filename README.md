@@ -10,6 +10,16 @@ It is a bachelor's degree project: a Spring Boot REST API with a MySQL database,
 ## Screenshots
 
 <!-- screenshots -->
+| | |
+|---|---|
+| ![Staff dashboard](docs/screenshots/dashboard-dark.png) | ![Triage board](docs/screenshots/triage-board.png) |
+| **Staff dashboard** with filters, charts and drill-down | **Triage board** (drag and drop, or the actions menu) |
+| ![Incident detail](docs/screenshots/incident-detail.png) | ![Command center](docs/screenshots/command-center.png) |
+| **Incident detail** with notes, evidence and timeline | **Command center** for admins: SLA breaches and team load |
+| ![Reporter portal](docs/screenshots/portal-overview.png) | ![Mobile dashboard](docs/screenshots/dashboard-mobile.png) |
+| **Reporter portal** for employees | **Phone layout** (the same dashboard at 390 px) |
+
+More screens, including the light theme, are in [docs/screenshots](docs/screenshots).
 <!-- /screenshots -->
 
 ## Features
