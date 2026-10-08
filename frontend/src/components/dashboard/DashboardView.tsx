@@ -65,7 +65,7 @@ export function DashboardView() {
         {filtered.length === 0 ? (
           <Card>{noMatches}</Card>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Card
               title={`Reported per day, last ${chartDays} days`}
               action={range.days === null ? <span className="text-xs text-muted">The rest of the page covers all time</span> : undefined}
@@ -101,7 +101,7 @@ export function DashboardView() {
             </Card>
           </div>
         )}
-        <div className="mt-4 grid gap-4 xl:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
           <Card title="Incidents" action={<span className="text-xs text-muted">{filtered.length} matching</span>} flush className="xl:col-span-2">
             <IncidentTable incidents={filtered} hrefFor={hrefFor} empty={noMatches} />
           </Card>

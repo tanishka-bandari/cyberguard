@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Logout from "@mui/icons-material/Logout";
 import Menu from "@mui/icons-material/Menu";
 import { GlobalSearch } from "@/components/layout/GlobalSearch";
@@ -13,11 +12,12 @@ const ROLE_LABEL = { USER: "Reporter", ANALYST: "Analyst", ADMIN: "Admin" } as c
 
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { user, signOut } = useSession();
-  const router = useRouter();
 
   const handleSignOut = () => {
     signOut();
-    router.replace("/login");
+    // A full navigation: the guard would otherwise redirect first and tack ?next=<this page> onto /login.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload on purpose
+    window.location.href = "/login";
   };
 
   return (

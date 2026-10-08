@@ -58,7 +58,7 @@ export function CommandCenterView() {
           <KpiCard label="Open total" value={openIncidents(data).length} icon={<FolderOpen fontSize="inherit" />} href="/incidents" />
           <KpiCard label="Staff" value={staff.data.length} hint="Analysts and admins" icon={<GroupIcon fontSize="inherit" />} href="/team" />
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card title="Open incidents per staff member">
             {workload.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted">The server returned no staff accounts.</p>
