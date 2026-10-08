@@ -3,16 +3,18 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { DataTable, type Column } from "@/components/ui/DataTable";
+import { Progress } from "@/components/ui/Progress";
 import { RiskMeter } from "@/components/ui/RiskMeter";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { STATUSES, TYPE_LABEL, severityRank } from "@/lib/domain/incident";
+import { STATUSES, TYPE_LABEL, isOpen, progressOf, severityRank } from "@/lib/domain/incident";
 import { timeAgo } from "@/lib/format";
 import type { Incident } from "@/types/domain";
 
 interface IncidentTableProps {
   incidents: readonly Incident[];
   // Where a row's title links to, e.g. (i) => `/incidents/${i.id}` or `/portal/cases/${i.id}`.
+  // Open critical rows are highlighted.
   hrefFor: (incident: Incident) => string;
   onRowClick?: (incident: Incident) => void;
   showReporter?: boolean;
@@ -30,12 +32,21 @@ export function IncidentTable({
 }: IncidentTableProps) {
   const columns: Column<Incident>[] = [
     {
+      key: "id",
+      header: "ID",
+      sortValue: (i) => i.id,
+      cell: (i) => <span className="font-mono text-xs text-muted">#{i.id}</span>,
+    },
+    {
       key: "title",
-      header: "Incident",
+      header: "Title",
       sortValue: (i) => i.title.toLowerCase(),
       cell: (i) => (
-        <Link href={hrefFor(i)} className="font-medium hover:text-accent-text hover:underline">
-          <span className="mr-2 font-mono text-xs text-muted">#{i.id}</span>
+        <Link
+          href={hrefFor(i)}
+          data-critical-open={i.severity === "CRITICAL" && isOpen(i) ? "" : undefined}
+          className="font-medium hover:text-accent-text hover:underline"
+        >
           {i.title}
         </Link>
       ),
@@ -64,23 +75,36 @@ export function IncidentTable({
       cell: (i) => i.assignee?.name ?? <span className="text-muted">Unassigned</span>,
     },
     {
+      key: "progress",
+      header: "Progress",
+      sortValue: progressOf,
+      cell: (i) => (
+        <div className="flex min-w-28 items-center gap-2">
+          <Progress value={progressOf(i)} label={`Progress of incident ${i.id}`} />
+          <span className="w-9 text-right font-mono text-xs tabular-nums">{progressOf(i)}%</span>
+        </div>
+      ),
+    },
+    {
       key: "reportedAt",
-      header: "Reported",
+      header: "Age",
       sortValue: (i) => i.reportedAt.getTime(),
       cell: (i) => <time dateTime={i.reportedAt.toISOString()}>{timeAgo(i.reportedAt)}</time>,
     },
   ];
 
   return (
-    <DataTable
-      caption="Incidents"
-      columns={columns}
-      rows={incidents}
-      rowKey={(i) => i.id}
-      pageSize={pageSize}
-      initialSort={{ key: "reportedAt", dir: "desc" }}
-      onRowClick={onRowClick}
-      empty={empty}
-    />
+    <div className="[&_tr:has([data-critical-open])]:bg-critical/10 [&_tr:has([data-critical-open])>td:first-child]:shadow-[inset_3px_0_0_var(--critical)]">
+      <DataTable
+        caption="Incidents"
+        columns={columns}
+        rows={incidents}
+        rowKey={(i) => i.id}
+        pageSize={pageSize}
+        initialSort={{ key: "reportedAt", dir: "desc" }}
+        onRowClick={onRowClick}
+        empty={empty}
+      />
+    </div>
   );
 }
