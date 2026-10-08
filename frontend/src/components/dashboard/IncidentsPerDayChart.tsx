@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartLegend } from "@/components/dashboard/ChartLegend";
 import { ChartTooltip } from "@/components/dashboard/ChartTooltip";
@@ -20,7 +21,7 @@ const tick = { fill: "var(--muted)", fontSize: 12 };
 const STACK_ORDER = [...SEVERITIES].reverse();
 
 export function IncidentsPerDayChart({ buckets, selected, onSelect }: IncidentsPerDayChartProps) {
-  const data = buckets.map((b) => ({ label: dayLabel.format(b.day), ...b.bySeverity }));
+  const data = useMemo(() => buckets.map((b) => ({ label: dayLabel.format(b.day), ...b.bySeverity })), [buckets]);
   const total = buckets.reduce((sum, b) => sum + b.total, 0);
   // With many thin bars the 2px gap would swallow the fill.
   const gap = buckets.length > 31 ? 0 : 2;

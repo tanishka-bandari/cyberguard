@@ -10,7 +10,7 @@ import type {
 import type { AuditEntry, Evidence, Incident, Note, Session, User } from "@/types/domain";
 
 // The backend sends LocalDateTime in UTC with no offset, so "Z" is added before parsing.
-export function parseTimestamp(value: ApiTimestamp): Date {
+function parseTimestamp(value: ApiTimestamp): Date {
   if (Array.isArray(value)) {
     const [y, mo, d, h = 0, mi = 0, s = 0] = value;
     return new Date(Date.UTC(y, mo - 1, d, h, mi, s));

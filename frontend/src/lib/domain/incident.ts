@@ -31,6 +31,8 @@ export const SEVERITY_LABEL: Record<Severity, string> = {
   LOW: "Low",
 };
 
+export const SEVERITY_OPTIONS = SEVERITIES.map((s) => ({ value: s, label: SEVERITY_LABEL[s] }));
+
 export const STATUS_LABEL: Record<IncidentStatus, string> = {
   REPORTED: "Reported",
   TRIAGED: "Triaged",
@@ -51,6 +53,8 @@ export const TYPE_LABEL: Record<IncidentType, string> = {
   SOCIAL_ENGINEERING: "Social engineering",
   OTHER: "Other",
 };
+
+export const TYPE_OPTIONS = INCIDENT_TYPES.map((t) => ({ value: t, label: TYPE_LABEL[t] }));
 
 // The backend has no progress field; it is derived from the status.
 export const STATUS_PROGRESS: Record<IncidentStatus, number> = {
@@ -113,12 +117,8 @@ export const canMoveTo = (incident: Pick<Incident, "assignee">, status: Incident
 // Solved incidents must be reopened before they can get an assignee.
 export const isAssignable = (incident: Pick<Incident, "status">) => isOpen(incident);
 
-// What the backend does to the status when the assignee changes.
-export const statusAfterAssign = (status: IncidentStatus): IncidentStatus =>
-  status === "REPORTED" || status === "TRIAGED" || status === "ASSIGNED" ? "UNDER_INVESTIGATION" : status;
-
-export const statusAfterUnassign = (status: IncidentStatus): IncidentStatus =>
-  needsAssignee(status) ? "REPORTED" : status;
+export const replaceIncident = (list: Incident[] | undefined, saved: Incident) =>
+  list?.map((i) => (i.id === saved.id ? saved : i));
 
 export const progressOf = (incident: Pick<Incident, "status">) => STATUS_PROGRESS[incident.status];
 

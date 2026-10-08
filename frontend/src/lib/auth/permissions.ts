@@ -1,4 +1,4 @@
-import type { Incident, User } from "@/types/domain";
+import type { Incident, Role, User } from "@/types/domain";
 
 export type Action =
   | "incident:create"
@@ -13,7 +13,10 @@ export type Action =
   | "audit:readRecent"
   | "users:manage";
 
-const isStaff = (user: User) => user.role === "ANALYST" || user.role === "ADMIN";
+export const STAFF_ROLES: readonly Role[] = ["ANALYST", "ADMIN"];
+
+export const isStaff = (user: User) => STAFF_ROLES.includes(user.role);
+export const isAdmin = (user: User) => user.role === "ADMIN";
 const owns = (user: User, incident?: Incident) => !!incident && incident.reporter.id === user.id;
 
 // Every UI decision about "may this user do X" goes through here.
@@ -30,7 +33,7 @@ export function can(user: User | null, action: Action, incident?: Incident): boo
     case "incident:assign":
     case "incident:delete":
     case "users:manage":
-      return user.role === "ADMIN";
+      return isAdmin(user);
     case "note:read":
     case "evidence:read":
     case "evidence:upload":

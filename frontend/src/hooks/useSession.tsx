@@ -10,7 +10,6 @@ type Status = "loading" | "authenticated" | "anonymous";
 interface SessionValue {
   status: Status;
   user: User | null;
-  token: string | null;
   signIn: (session: Session) => void;
   signOut: () => void;
 }
@@ -33,7 +32,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     () => ({
       status: session === undefined ? "loading" : session ? "authenticated" : "anonymous",
       user: session?.user ?? null,
-      token: session?.token ?? null,
       signIn: saveSession,
       signOut,
     }),

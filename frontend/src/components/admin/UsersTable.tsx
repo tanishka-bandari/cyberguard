@@ -15,14 +15,14 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { STAFF_KEY } from "@/hooks/useStaff";
 import { useSession } from "@/hooks/useSession";
 import { USERS_KEY, useUsers } from "@/hooks/useUsers";
+import { errorMessage } from "@/lib/api/client";
 import { changeRole } from "@/lib/api/users";
 import { can } from "@/lib/auth/permissions";
 import { cn } from "@/lib/cn";
+import { ROLES, ROLE_LABEL } from "@/lib/domain/user";
 import { toast } from "@/lib/toast";
 import type { Role, User } from "@/types/domain";
 
-const ROLES: readonly Role[] = ["USER", "ANALYST", "ADMIN"];
-const ROLE_LABEL: Record<Role, string> = { USER: "Reporter", ANALYST: "Analyst", ADMIN: "Admin" };
 const ROLE_TONE: Record<Role, BadgeTone> = { USER: "neutral", ANALYST: "info", ADMIN: "accent" };
 
 interface RoleChange {
@@ -47,7 +47,7 @@ export function UsersTable() {
         toast.success(`${user.name} is now ${ROLE_LABEL[role].toLowerCase()}`);
         await Promise.all([refresh(USERS_KEY), refresh(STAFF_KEY)]);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : `Could not change the role of ${user.name}`);
+        toast.error(errorMessage(e, `Could not change the role of ${user.name}`));
       } finally {
         setSavingId(null);
       }

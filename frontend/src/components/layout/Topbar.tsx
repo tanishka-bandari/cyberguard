@@ -7,8 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useSession } from "@/hooks/useSession";
-
-const ROLE_LABEL = { USER: "Reporter", ANALYST: "Analyst", ADMIN: "Admin" } as const;
+import { ROLE_LABEL } from "@/lib/domain/user";
 
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { user, signOut } = useSession();

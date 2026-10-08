@@ -27,11 +27,6 @@ export type IncidentStatus =
 
 export type ApiTimestamp = string | number[];
 
-export interface LoginRequestDto {
-  email: string;
-  password: string;
-}
-
 export interface LoginResponseDto {
   token: string;
   id: number;
@@ -95,9 +90,4 @@ export interface AuditLogDto {
   userEmail: string | null;
   incidentId: number | null;
   createdAt: ApiTimestamp;
-}
-
-export interface ApiErrorBody {
-  status: number;
-  message: string;
 }

@@ -2,18 +2,16 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useSWRConfig } from "swr";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { INCIDENTS_KEY } from "@/hooks/useIncidents";
+import { useIncidentMutations } from "@/hooks/useIncidentMutations";
 import { useSession } from "@/hooks/useSession";
 import { assignIncident } from "@/lib/api/incidents";
 import { can } from "@/lib/auth/permissions";
 import { isOpen } from "@/lib/domain/incident";
 import { unassignedOpen } from "@/lib/domain/stats";
-import { toast } from "@/lib/toast";
 import type { Incident, User } from "@/types/domain";
 
 interface StaffDialogProps {
@@ -40,7 +38,7 @@ function IncidentLine({ incident, action }: { incident: Incident; action?: React
 
 export function StaffDialog({ person, incidents, onClose }: StaffDialogProps) {
   const { user } = useSession();
-  const { mutate } = useSWRConfig();
+  const mutateIncident = useIncidentMutations();
   const [assigningId, setAssigningId] = useState<number | null>(null);
 
   const assigned = person
@@ -52,15 +50,8 @@ export function StaffDialog({ person, incidents, onClose }: StaffDialogProps) {
   async function assign(incident: Incident) {
     if (!person) return;
     setAssigningId(incident.id);
-    try {
-      await assignIncident(incident.id, person.id);
-      await mutate(INCIDENTS_KEY);
-      toast.success(`Assigned #${incident.id} to ${person.name}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not assign the incident");
-    } finally {
-      setAssigningId(null);
-    }
+    await mutateIncident(assignIncident(incident.id, person.id), `Assigned #${incident.id} to ${person.name}`);
+    setAssigningId(null);
   }
 
   return (

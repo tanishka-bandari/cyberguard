@@ -10,7 +10,7 @@ import { TeamPerformance } from "@/components/admin/TeamPerformance";
 import { WorkloadChart } from "@/components/admin/WorkloadChart";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { TrendChart } from "@/components/dashboard/TrendChart";
-import { useNow } from "@/components/dashboard/useNow";
+import { useNow, useToday } from "@/components/dashboard/useNow";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -26,10 +26,11 @@ export function CommandCenterView() {
   const incidents = useIncidents();
   const staff = useStaff();
   const now = useNow();
+  const today = useToday();
 
   const data = incidents.data;
   const workload = useMemo(() => workloadByStaff(data ?? [], staff.data ?? []), [data, staff.data]);
-  const trend = useMemo(() => bucketByDay(data ?? [], 14, now), [data, now]);
+  const trend = useMemo(() => bucketByDay(data ?? [], 14, today), [data, today]);
 
   const error = incidents.error ?? staff.error;
   const retry = () => void Promise.all([incidents.mutate(), staff.mutate()]);

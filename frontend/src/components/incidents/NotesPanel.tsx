@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { auditKey } from "@/hooks/useAuditLog";
 import { useNotes } from "@/hooks/useNotes";
 import { useSession } from "@/hooks/useSession";
+import { errorMessage } from "@/lib/api/client";
 import { addNote } from "@/lib/api/notes";
 import { can } from "@/lib/auth/permissions";
 import { formatDateTime } from "@/lib/format";
@@ -37,7 +38,7 @@ export function NotesPanel({ incident }: { incident: Incident }) {
       await mutate();
       void refreshAudit(auditKey(incident.id));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "The note could not be saved");
+      toast.error(errorMessage(e, "The note could not be saved"));
     } finally {
       setSaving(false);
     }

@@ -4,6 +4,7 @@ import { useEffect, useRef, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Search from "@mui/icons-material/Search";
 import { useSession } from "@/hooks/useSession";
+import { isStaff } from "@/lib/auth/permissions";
 
 // Ctrl/Cmd+K focuses the box; Enter opens the incident list filtered by the text.
 // Reporters have no /incidents page, so theirs searches their own cases.
@@ -28,7 +29,7 @@ export function GlobalSearch() {
     e.preventDefault();
     const q = input.current?.value.trim();
     if (!q) return;
-    const base = user?.role === "USER" ? "/portal/cases" : "/incidents";
+    const base = user && !isStaff(user) ? "/portal/cases" : "/incidents";
     router.push(`${base}?q=${encodeURIComponent(q)}`);
   };
 

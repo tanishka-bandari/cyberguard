@@ -5,19 +5,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { actionLabel } from "@/lib/domain/audit";
 import { formatDateTime } from "@/lib/format";
-
-const ACTION_LABEL: Record<string, string> = {
-  INCIDENT_CREATED: "Incident reported",
-  STATUS_CHANGED: "Status changed",
-  INCIDENT_ASSIGNED: "Assigned",
-  INCIDENT_UNASSIGNED: "Unassigned",
-  NOTE_ADDED: "Note added",
-  EVIDENCE_UPLOADED: "Evidence uploaded",
-};
-
-const actionLabel = (action: string) =>
-  ACTION_LABEL[action] ?? action.charAt(0) + action.slice(1).toLowerCase().replaceAll("_", " ");
 
 export function Timeline({ incidentId }: { incidentId: number }) {
   const { data: entries, error, isLoading, mutate } = useAuditLog(incidentId);

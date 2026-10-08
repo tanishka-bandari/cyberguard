@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useReplaceParams } from "@/hooks/useReplaceParams";
 import { EMPTY_FILTERS, FILTER_KEYS, applyFilterPatch, filterIncidents, parseFilters, type IncidentFilters } from "@/lib/domain/filters";
 import { STATUS_GROUPS, isOpen, type StatusGroup } from "@/lib/domain/incident";
 import type { Incident } from "@/types/domain";
@@ -25,8 +26,8 @@ export interface DashboardPatch extends Omit<Partial<IncidentFilters>, "range"> 
 
 // URL-backed filter state for /dashboard. Uses useSearchParams, so wrap the page in <Suspense>.
 export function useDashboardFilters() {
-  const router = useRouter();
   const pathname = usePathname();
+  const replaceParams = useReplaceParams();
   const query = useSearchParams().toString();
 
   const params = useMemo(() => new URLSearchParams(query), [query]);
@@ -44,10 +45,9 @@ export function useDashboardFilters() {
         if (open) next.set("open", "1");
         else next.delete("open");
       }
-      const qs = next.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      replaceParams(next);
     },
-    [params, pathname, router],
+    [params, replaceParams],
   );
 
   const setScope = useCallback(

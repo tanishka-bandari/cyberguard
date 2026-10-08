@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { INCIDENTS_KEY } from "@/hooks/useIncidents";
+import { errorMessage } from "@/lib/api/client";
 import { createIncident } from "@/lib/api/incidents";
 import { uploadEvidence } from "@/lib/api/evidence";
 
@@ -89,7 +90,7 @@ export function ReportWizard() {
       void mutate(INCIDENTS_KEY);
       setCreated({ id: incident.id, failedFiles });
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "The report could not be sent.");
+      setSubmitError(errorMessage(error, "The report could not be sent."));
     } finally {
       setSubmitting(false);
     }

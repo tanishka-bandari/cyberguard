@@ -6,13 +6,8 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useNow } from "@/components/dashboard/useNow";
 import { useRecentActivity } from "@/hooks/useRecentActivity";
+import { actionLabel } from "@/lib/domain/audit";
 import { timeAgo } from "@/lib/format";
-
-// "STATUS_CHANGED" -> "Status changed"
-const actionLabel = (action: string) => {
-  const text = action.toLowerCase().replaceAll("_", " ");
-  return text.charAt(0).toUpperCase() + text.slice(1);
-};
 
 // The real audit log, newest first.
 export function RecentActivity({ limit = 10 }: { limit?: number }) {

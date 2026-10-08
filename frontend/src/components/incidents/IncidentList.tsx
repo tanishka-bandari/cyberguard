@@ -17,6 +17,7 @@ import { useIncidentFilters } from "@/hooks/useIncidentFilters";
 import { useIncidents } from "@/hooks/useIncidents";
 import { useSession } from "@/hooks/useSession";
 import { can } from "@/lib/auth/permissions";
+import { filterIncidents } from "@/lib/domain/filters";
 import type { Incident } from "@/types/domain";
 
 const detailHref = (incident: Incident) => `/incidents/${incident.id}`;
@@ -25,11 +26,11 @@ export function IncidentList() {
   const router = useRouter();
   const { user } = useSession();
   const { data, error, isLoading, mutate } = useIncidents();
-  const { filters, setFilters, clear, apply, isFiltered } = useIncidentFilters();
+  const { filters, setFilters, clear, isFiltered } = useIncidentFilters();
   const [reporting, setReporting] = useState(false);
 
   const all = data ?? [];
-  const shown = apply(all);
+  const shown = filterIncidents(all, filters);
 
   const reportButton = can(user, "incident:create") && (
     <Button variant="primary" onClick={() => setReporting(true)}>

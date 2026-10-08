@@ -6,12 +6,9 @@ const dateTime = new Intl.DateTimeFormat("en-GB", {
   minute: "2-digit",
 });
 
-const dateOnly = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
-
 const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
 export const formatDateTime = (date: Date) => dateTime.format(date);
-export const formatDate = (date: Date) => dateOnly.format(date);
 
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["day", 86_400],

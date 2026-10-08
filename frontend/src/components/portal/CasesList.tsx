@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { CaseCard } from "@/components/portal/CaseCard";
 import { Button, buttonClass } from "@/components/ui/Button";
 import { Chips } from "@/components/ui/Chips";
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useIncidents } from "@/hooks/useIncidents";
+import { useReplaceParams } from "@/hooks/useReplaceParams";
 import { EMPTY_FILTERS, filterIncidents } from "@/lib/domain/filters";
 import { isOpen } from "@/lib/domain/incident";
 
@@ -18,8 +19,7 @@ const parseFilter = (value: string | null): CaseFilter | null =>
   value === "open" || value === "resolved" ? value : null;
 
 export function CasesList() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const replaceParams = useReplaceParams();
   const params = useSearchParams();
   const { data, error, isLoading, mutate } = useIncidents();
 
@@ -30,8 +30,7 @@ export function CasesList() {
     const next = new URLSearchParams(params.toString());
     if (value) next.set(key, value);
     else next.delete(key);
-    const qs = next.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    replaceParams(next);
   };
 
   if (isLoading || (!data && !error)) return <Skeleton className="h-64" />;

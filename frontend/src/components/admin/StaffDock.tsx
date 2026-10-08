@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useMemo } from "react";
+import { useDropTarget } from "@/components/admin/useDropTarget";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
-import { isAssignable, isOpen } from "@/lib/domain/incident";
+import { isAssignable } from "@/lib/domain/incident";
+import { workloadByStaff } from "@/lib/domain/stats";
 import type { Incident, User } from "@/types/domain";
 
 interface StaffDockProps {
@@ -12,47 +14,49 @@ interface StaffDockProps {
   onDrop: (person: User) => void;
 }
 
+interface StaffChipProps {
+  person: User;
+  open: number;
+  isTarget: boolean;
+  onDrop: (person: User) => void;
+}
+
+function StaffChip({ person, open, isTarget, onDrop }: StaffChipProps) {
+  const { isOver, handlers } = useDropTarget(isTarget, () => onDrop(person));
+  return (
+    <li
+      {...handlers}
+      className={cn(
+        "flex shrink-0 items-center gap-2 rounded-md border bg-surface px-3 py-2 motion-safe:transition-colors",
+        isTarget ? "border-dashed border-accent" : "border-border",
+        isOver && "bg-accent/10",
+      )}
+    >
+      <Avatar name={person.name} />
+      <div className="text-sm">
+        <p className="font-medium leading-tight">{person.name}</p>
+        <p className="text-xs text-muted">
+          {open} open, {person.role.toLowerCase()}
+        </p>
+      </div>
+    </li>
+  );
+}
+
 export function StaffDock({ staff, incidents, dragging, canAssign, onDrop }: StaffDockProps) {
-  const [overId, setOverId] = useState<number | null>(null);
-  const openCount = (id: number) => incidents.filter((i) => i.assignee?.id === id && isOpen(i)).length;
+  const workloads = useMemo(() => workloadByStaff(incidents, staff), [incidents, staff]);
 
   return (
     <ul className="flex gap-2 overflow-x-auto pb-1">
-      {staff.map((person) => {
-        const isTarget =
-          canAssign && !!dragging && isAssignable(dragging) && dragging.assignee?.id !== person.id;
-        return (
-          <li
-            key={person.id}
-            onDragOver={(e) => {
-              if (!isTarget) return;
-              e.preventDefault();
-              setOverId(person.id);
-            }}
-            onDragLeave={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOverId(null);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              setOverId(null);
-              if (isTarget) onDrop(person);
-            }}
-            className={cn(
-              "flex shrink-0 items-center gap-2 rounded-md border bg-surface px-3 py-2 motion-safe:transition-colors",
-              isTarget ? "border-dashed border-accent" : "border-border",
-              isTarget && overId === person.id && "bg-accent/10",
-            )}
-          >
-            <Avatar name={person.name} />
-            <div className="text-sm">
-              <p className="font-medium leading-tight">{person.name}</p>
-              <p className="text-xs text-muted">
-                {openCount(person.id)} open, {person.role.toLowerCase()}
-              </p>
-            </div>
-          </li>
-        );
-      })}
+      {workloads.map(({ person, open }) => (
+        <StaffChip
+          key={person.id}
+          person={person}
+          open={open}
+          isTarget={canAssign && !!dragging && isAssignable(dragging) && dragging.assignee?.id !== person.id}
+          onDrop={onDrop}
+        />
+      ))}
     </ul>
   );
 }

@@ -12,6 +12,9 @@ export class ApiError extends Error {
   }
 }
 
+export const errorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 interface ApiConfig {
   getToken: () => string | null;
   onUnauthorized: () => void;

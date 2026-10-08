@@ -2,8 +2,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import { OVERLOADED_OPEN, type StaffWorkload } from "@/lib/domain/stats";
-
-const ROLE_LABEL = { ANALYST: "Analyst", ADMIN: "Admin", USER: "User" } as const;
+import { ROLE_LABEL } from "@/lib/domain/user";
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (

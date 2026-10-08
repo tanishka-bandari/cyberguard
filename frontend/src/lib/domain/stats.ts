@@ -10,7 +10,7 @@ import type { Incident, IncidentStatus, IncidentType, Severity, User } from "@/t
 // Policy: a staff member with this many open incidents counts as overloaded.
 export const OVERLOADED_OPEN = 4;
 
-export function countBy<T, K extends string>(items: readonly T[], key: (item: T) => K) {
+function countBy<T, K extends string>(items: readonly T[], key: (item: T) => K) {
   const counts: Partial<Record<K, number>> = {};
   for (const item of items) counts[key(item)] = (counts[key(item)] ?? 0) + 1;
   return counts;
@@ -78,7 +78,7 @@ export function byType(incidents: readonly Incident[]): { type: IncidentType; co
     .sort((a, b) => b.count - a.count);
 }
 
-export const resolutionRate = (resolved: number, assigned: number) =>
+const resolutionRate = (resolved: number, assigned: number) =>
   assigned === 0 ? null : Math.round((resolved / assigned) * 100);
 
 export interface StaffWorkload {

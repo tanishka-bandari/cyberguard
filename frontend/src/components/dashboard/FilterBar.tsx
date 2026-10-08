@@ -4,17 +4,15 @@ import type { ReactNode } from "react";
 import { DASHBOARD_RANGES, type DashboardRange, type StatusScope, useDashboardFilters } from "@/components/dashboard/useDashboardFilters";
 import { Button } from "@/components/ui/Button";
 import { Chips } from "@/components/ui/Chips";
+import { TypeSelect } from "@/components/incidents/TypeSelect";
 import { Select } from "@/components/ui/Select";
 import { UNASSIGNED } from "@/lib/domain/filters";
-import { GROUP_LABEL, INCIDENT_TYPES, SEVERITIES, SEVERITY_LABEL, STATUS_GROUPS, TYPE_LABEL } from "@/lib/domain/incident";
-import type { IncidentType } from "@/types/domain";
+import { GROUP_LABEL, SEVERITY_OPTIONS, STATUS_GROUPS } from "@/lib/domain/incident";
 
 const SCOPE_OPTIONS: { value: StatusScope; label: string }[] = [
   { value: "open", label: "Open" },
   ...STATUS_GROUPS.map((g) => ({ value: g, label: GROUP_LABEL[g] })),
 ];
-
-const SEVERITY_OPTIONS = SEVERITIES.map((s) => ({ value: s, label: SEVERITY_LABEL[s] }));
 
 const ASSIGNEE_OPTIONS = [
   { value: "me", label: "Assigned to me" },
@@ -53,18 +51,7 @@ export function FilterBar({ view, userId }: FilterBarProps) {
         </Select>
       </div>
       <div className="w-full sm:w-52">
-        <Select
-          label="Type"
-          value={filters.type ?? ""}
-          onChange={(e) => update({ type: (e.target.value || null) as IncidentType | null })}
-        >
-          <option value="">All types</option>
-          {INCIDENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {TYPE_LABEL[t]}
-            </option>
-          ))}
-        </Select>
+        <TypeSelect value={filters.type} onChange={(type) => update({ type })} allLabel="All types" />
       </div>
       <Group label="Severity">
         <Chips label="Severity" options={SEVERITY_OPTIONS} value={filters.severity} onChange={(severity) => update({ severity })} />

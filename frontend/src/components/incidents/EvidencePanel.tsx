@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { auditKey } from "@/hooks/useAuditLog";
 import { useEvidence } from "@/hooks/useEvidence";
 import { useSession } from "@/hooks/useSession";
+import { errorMessage } from "@/lib/api/client";
 import { downloadEvidence, uploadEvidence } from "@/lib/api/evidence";
 import { can } from "@/lib/auth/permissions";
 import { cn } from "@/lib/cn";
@@ -45,7 +46,7 @@ export function EvidencePanel({ incident }: { incident: Incident }) {
       try {
         await uploadEvidence(incident.id, file);
       } catch (e) {
-        toast.error(`${file.name}: ${e instanceof Error ? e.message : "upload failed"}`);
+        toast.error(`${file.name}: ${errorMessage(e, "upload failed")}`);
       }
     }
     setUpload(null);
@@ -64,7 +65,7 @@ export function EvidencePanel({ incident }: { incident: Incident }) {
     try {
       await downloadEvidence(item);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "The file could not be downloaded");
+      toast.error(errorMessage(e, "The file could not be downloaded"));
     } finally {
       setDownloading(null);
     }

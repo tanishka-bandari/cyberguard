@@ -5,6 +5,7 @@ import Inventory2 from "@mui/icons-material/Inventory2";
 import PersonOff from "@mui/icons-material/PersonOff";
 import Report from "@mui/icons-material/Report";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { isAdmin } from "@/lib/auth/permissions";
 import { STATUS_GROUP, isOpen } from "@/lib/domain/incident";
 import { UNASSIGNED } from "@/lib/domain/filters";
 import type { Incident, User } from "@/types/domain";
@@ -40,7 +41,7 @@ export function DashboardKpis({ incidents, rangeLabel, user, hrefFor }: Dashboar
         icon={<PersonOff fontSize="inherit" />}
         href={hrefFor({ open: "1", assignee: UNASSIGNED })}
       />
-      {user.role === "ADMIN" ? (
+      {isAdmin(user) ? (
         <KpiCard
           label="Resolved"
           value={solved.length}

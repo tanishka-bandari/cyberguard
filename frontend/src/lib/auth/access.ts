@@ -1,3 +1,4 @@
+import { STAFF_ROLES } from "@/lib/auth/permissions";
 import type { Role } from "@/types/domain";
 
 // The single route-access table. The sidebar and AuthGuard are both derived from it.
@@ -8,12 +9,10 @@ export interface RouteRule {
   nav?: { label: string; section: "Operations" | "Administration" | "Reporting" };
 }
 
-const STAFF: readonly Role[] = ["ANALYST", "ADMIN"];
-
 export const ROUTES: readonly RouteRule[] = [
-  { prefix: "/dashboard", roles: STAFF, nav: { label: "Dashboard", section: "Operations" } },
-  { prefix: "/incidents", roles: STAFF, nav: { label: "Incidents", section: "Operations" } },
-  { prefix: "/team", roles: STAFF, nav: { label: "Team", section: "Operations" } },
+  { prefix: "/dashboard", roles: STAFF_ROLES, nav: { label: "Dashboard", section: "Operations" } },
+  { prefix: "/incidents", roles: STAFF_ROLES, nav: { label: "Incidents", section: "Operations" } },
+  { prefix: "/team", roles: STAFF_ROLES, nav: { label: "Team", section: "Operations" } },
   {
     prefix: "/admin/command-center",
     roles: ["ADMIN"],
@@ -27,7 +26,7 @@ export const ROUTES: readonly RouteRule[] = [
   { prefix: "/portal", roles: ["USER"], nav: { label: "Overview", section: "Reporting" } },
 ];
 
-export const HOME: Record<Role, string> = {
+const HOME: Record<Role, string> = {
   USER: "/portal",
   ANALYST: "/dashboard",
   ADMIN: "/admin/command-center",
@@ -38,7 +37,7 @@ export const homeFor = (role: Role) => HOME[role];
 const matches = (pathname: string, prefix: string) =>
   pathname === prefix || pathname.startsWith(`${prefix}/`);
 
-export function ruleFor(pathname: string): RouteRule | undefined {
+function ruleFor(pathname: string): RouteRule | undefined {
   return ROUTES.filter((r) => matches(pathname, r.prefix)).sort(
     (a, b) => b.prefix.length - a.prefix.length,
   )[0];

@@ -8,7 +8,7 @@ import { FilterBar } from "@/components/dashboard/FilterBar";
 import { IncidentsPerDayChart } from "@/components/dashboard/IncidentsPerDayChart";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { useDashboardFilters } from "@/components/dashboard/useDashboardFilters";
-import { useNow } from "@/components/dashboard/useNow";
+import { useToday } from "@/components/dashboard/useNow";
 import { IncidentTable } from "@/components/incidents/IncidentTable";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -28,14 +28,14 @@ const hrefFor = (incident: { id: number }) => `/incidents/${incident.id}`;
 export function DashboardView() {
   const { user } = useSession();
   const { data, error, isLoading, mutate } = useIncidents();
-  const now = useNow();
+  const today = useToday();
   const view = useDashboardFilters();
   const { filters, range, update, matches, isFiltered, clear } = view;
 
   const chartDays = range.days ?? ALL_TIME_CHART_DAYS;
-  const inRange = useMemo(() => reportedWithin(data ?? [], range.days, now), [data, range.days, now]);
+  const inRange = useMemo(() => reportedWithin(data ?? [], range.days, today), [data, range.days, today]);
   const filtered = useMemo(() => matches(inRange), [matches, inRange]);
-  const buckets = useMemo(() => bucketByDay(filtered, chartDays, now), [filtered, chartDays, now]);
+  const buckets = useMemo(() => bucketByDay(filtered, chartDays, today), [filtered, chartDays, today]);
   const statusData = useMemo(
     () => openByStatus(filtered).map((s) => ({ key: s.status, label: STATUS_LABEL[s.status], value: s.count })),
     [filtered],

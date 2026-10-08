@@ -1,10 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
 import { Select } from "@/components/ui/Select";
 import { useIncidents } from "@/hooks/useIncidents";
 import { useStaff } from "@/hooks/useStaff";
-import { isAssignable, isOpen } from "@/lib/domain/incident";
-import type { Incident, Role, User } from "@/types/domain";
+import { isAssignable } from "@/lib/domain/incident";
+import { workloadByStaff } from "@/lib/domain/stats";
+import type { Incident, Role } from "@/types/domain";
 
 const GROUPS: { role: Role; label: string }[] = [
   { role: "ADMIN", label: "Admins" },
@@ -22,8 +24,7 @@ export function AssignSelect({ incident, disabled, onAssign, onUnassign }: Assig
   const { data: staff, error } = useStaff();
   const { data: incidents } = useIncidents();
 
-  const openCount = (member: User) =>
-    (incidents ?? []).filter((i) => isOpen(i) && i.assignee?.id === member.id).length;
+  const workloads = useMemo(() => workloadByStaff(incidents ?? [], staff ?? []), [incidents, staff]);
 
   const hint = !isAssignable(incident)
     ? "Reopen this incident first to change the assignee."
@@ -43,11 +44,11 @@ export function AssignSelect({ incident, disabled, onAssign, onUnassign }: Assig
       <option value="">Unassigned</option>
       {GROUPS.map(({ role, label }) => (
         <optgroup key={role} label={label}>
-          {(staff ?? [])
-            .filter((member) => member.role === role)
-            .map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name} ({openCount(member)} open)
+          {workloads
+            .filter(({ person }) => person.role === role)
+            .map(({ person, open }) => (
+              <option key={person.id} value={person.id}>
+                {person.name} ({open} open)
               </option>
             ))}
         </optgroup>

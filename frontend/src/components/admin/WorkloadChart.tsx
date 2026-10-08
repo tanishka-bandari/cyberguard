@@ -1,13 +1,18 @@
 "use client";
 
+import { useMemo } from "react";
 import { CountBarChart } from "@/components/dashboard/CountBarChart";
 import { OVERLOADED_OPEN, type StaffWorkload } from "@/lib/domain/stats";
 
 // Open incidents per staff member, with the overload threshold drawn as a reference line.
 export function WorkloadChart({ workload }: { workload: readonly StaffWorkload[] }) {
-  const data = [...workload]
-    .sort((a, b) => b.open - a.open)
-    .map((w) => ({ key: String(w.person.id), label: w.person.name, value: w.open }));
+  const data = useMemo(
+    () =>
+      [...workload]
+        .sort((a, b) => b.open - a.open)
+        .map((w) => ({ key: String(w.person.id), label: w.person.name, value: w.open })),
+    [workload],
+  );
   const overloaded = workload.filter((w) => w.open >= OVERLOADED_OPEN).length;
   return (
     <CountBarChart

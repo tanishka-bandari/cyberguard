@@ -17,7 +17,6 @@ interface IncidentTableProps {
   // Open critical rows are highlighted.
   hrefFor: (incident: Incident) => string;
   onRowClick?: (incident: Incident) => void;
-  showReporter?: boolean;
   pageSize?: number;
   empty?: ReactNode;
 }
@@ -26,7 +25,6 @@ export function IncidentTable({
   incidents,
   hrefFor,
   onRowClick,
-  showReporter = true,
   pageSize = 10,
   empty,
 }: IncidentTableProps) {
@@ -66,9 +64,7 @@ export function IncidentTable({
         cell: (i) => <StatusBadge status={i.status} />,
       },
       { key: "risk", header: "Risk", sortValue: (i) => i.riskScore, cell: (i) => <RiskMeter value={i.riskScore} /> },
-      ...(showReporter
-        ? [{ key: "reporter", header: "Reporter", sortValue: (i: Incident) => i.reporter.name, cell: (i: Incident) => i.reporter.name }]
-        : []),
+      { key: "reporter", header: "Reporter", sortValue: (i) => i.reporter.name, cell: (i) => i.reporter.name },
       {
         key: "assignee",
         header: "Assignee",
@@ -93,7 +89,7 @@ export function IncidentTable({
         cell: (i) => <time dateTime={i.reportedAt.toISOString()}>{timeAgo(i.reportedAt)}</time>,
       },
     ],
-    [hrefFor, showReporter],
+    [hrefFor],
   );
 
   return (

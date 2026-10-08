@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StaffDock } from "@/components/admin/StaffDock";
 import { TriageActionsDialog } from "@/components/admin/TriageActionsDialog";
 import { useTriageActions } from "@/components/admin/TriageActions";
 import { TriageColumn } from "@/components/admin/TriageColumn";
+import { useNow } from "@/components/dashboard/useNow";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -16,8 +17,6 @@ import { can } from "@/lib/auth/permissions";
 import { STATUSES, severityRank } from "@/lib/domain/incident";
 import type { Incident, IncidentStatus, User } from "@/types/domain";
 
-const CLOCK_TICK_MS = 60_000;
-
 export function TriageBoard() {
   const { user } = useSession();
   const incidentsQuery = useIncidents();
@@ -27,12 +26,7 @@ export function TriageBoard() {
   const [showClosed, setShowClosed] = useState(false);
   const [dragging, setDragging] = useState<Incident | null>(null);
   const [menuId, setMenuId] = useState<number | null>(null);
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), CLOCK_TICK_MS);
-    return () => clearInterval(timer);
-  }, []);
+  const now = useNow();
 
   const incidents = incidentsQuery.data;
   const canMove = can(user, "incident:changeStatus");

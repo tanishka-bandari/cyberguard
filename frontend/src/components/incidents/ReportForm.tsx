@@ -2,22 +2,16 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
+import { TypeSelect } from "@/components/incidents/TypeSelect";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { INCIDENTS_KEY } from "@/hooks/useIncidents";
+import { errorMessage } from "@/lib/api/client";
 import { createIncident } from "@/lib/api/incidents";
-import {
-  DEFAULT_RISK_SCORE,
-  DESCRIPTION_MAX,
-  INCIDENT_TYPES,
-  SEVERITIES,
-  SEVERITY_LABEL,
-  TITLE_MAX,
-  TYPE_LABEL,
-} from "@/lib/domain/incident";
+import { DEFAULT_RISK_SCORE, DESCRIPTION_MAX, SEVERITY_OPTIONS, TITLE_MAX } from "@/lib/domain/incident";
 import { toast } from "@/lib/toast";
 import type { Incident, IncidentType, Severity } from "@/types/domain";
 
@@ -58,7 +52,7 @@ export function ReportForm({ onCreated, onCancel }: ReportFormProps) {
       toast.success(`Incident #${incident.id} reported`);
       onCreated(incident);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not report the incident");
+      toast.error(errorMessage(error, "Could not report the incident"));
       setSaving(false);
     }
   }
@@ -74,17 +68,11 @@ export function ReportForm({ onCreated, onCancel }: ReportFormProps) {
         autoFocus
       />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Select label="Type" value={type} onChange={(e) => setType(e.target.value as IncidentType)}>
-          {INCIDENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {TYPE_LABEL[t]}
-            </option>
-          ))}
-        </Select>
+        <TypeSelect value={type} onChange={(t) => t && setType(t)} />
         <Select label="Severity" value={severity} onChange={(e) => setSeverity(e.target.value as Severity)}>
-          {SEVERITIES.map((s) => (
-            <option key={s} value={s}>
-              {SEVERITY_LABEL[s]}
+          {SEVERITY_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
             </option>
           ))}
         </Select>

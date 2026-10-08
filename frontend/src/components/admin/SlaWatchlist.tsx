@@ -1,9 +1,7 @@
 import Link from "next/link";
-import Schedule from "@mui/icons-material/Schedule";
-import WarningAmber from "@mui/icons-material/WarningAmber";
+import { SlaTimer } from "@/components/admin/SlaTimer";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
-import { formatDuration } from "@/lib/format";
 import { SLA_HOURS } from "@/lib/domain/incident";
 import { msUntilBreach, openIncidents } from "@/lib/domain/stats";
 import { cn } from "@/lib/cn";
@@ -11,17 +9,6 @@ import type { Incident } from "@/types/domain";
 
 const LIMIT = 8;
 const HOUR_MS = 3_600_000;
-
-function Timer({ left }: { left: number }) {
-  const overdue = left < 0;
-  const Icon = overdue ? WarningAmber : Schedule;
-  return (
-    <span className={cn("inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium", overdue ? "text-critical-text" : "text-muted")}>
-      <Icon fontSize="inherit" />
-      {overdue ? `Overdue by ${formatDuration(left)}` : `${formatDuration(left)} left`}
-    </span>
-  );
-}
 
 // Open incidents ordered by how soon (or how long ago) they pass the policy deadline.
 export function SlaWatchlist({ incidents, now }: { incidents: readonly Incident[]; now: Date }) {
@@ -52,7 +39,7 @@ export function SlaWatchlist({ incidents, now }: { incidents: readonly Incident[
               </div>
             </div>
             <span className="text-xs text-muted">{incident.assignee?.name ?? "Unassigned"}</span>
-            <Timer left={left} />
+            <SlaTimer left={left} severity={incident.severity} />
           </li>
         );
       })}

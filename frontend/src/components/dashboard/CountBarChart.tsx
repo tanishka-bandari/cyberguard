@@ -28,7 +28,7 @@ export function CountBarChart({ data, ariaLabel, unit, selectedKey, onSelect, re
   return (
     <div role="img" aria-label={ariaLabel} style={{ height: data.length * ROW_HEIGHT + 32 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={[...data]} layout="vertical" margin={{ top: 16, right: 32, bottom: 0, left: 0 }}>
+        <BarChart data={data} layout="vertical" margin={{ top: 16, right: 32, bottom: 0, left: 0 }}>
           <XAxis type="number" allowDecimals={false} domain={[0, max + 1]} tick={tick} axisLine={false} tickLine={false} />
           <YAxis type="category" dataKey="label" width={130} tick={tick} axisLine={false} tickLine={false} />
           <Tooltip

@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { TriageCard } from "@/components/admin/TriageCard";
+import { useDropTarget } from "@/components/admin/useDropTarget";
 import { cn } from "@/lib/cn";
 import { STATUS_LABEL, canMoveTo } from "@/lib/domain/incident";
 import type { Incident, IncidentStatus } from "@/types/domain";
@@ -29,29 +29,17 @@ export function TriageColumn({
   onDragEnd,
   onOpenActions,
 }: TriageColumnProps) {
-  const [isOver, setIsOver] = useState(false);
   const isTarget = canMove && !!dragging && dragging.status !== status && canMoveTo(dragging, status);
+  const { isOver, handlers } = useDropTarget(isTarget, () => onDrop(status));
 
   return (
     <section
       aria-label={`${STATUS_LABEL[status]}, ${incidents.length} incidents`}
-      onDragOver={(e) => {
-        if (!isTarget) return;
-        e.preventDefault();
-        setIsOver(true);
-      }}
-      onDragLeave={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setIsOver(false);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        setIsOver(false);
-        if (isTarget) onDrop(status);
-      }}
+      {...handlers}
       className={cn(
         "flex w-72 shrink-0 flex-col rounded-lg border bg-panel motion-safe:transition-colors",
         isTarget ? "border-dashed border-accent" : "border-border",
-        isTarget && isOver && "bg-accent/10",
+        isOver && "bg-accent/10",
       )}
     >
       <header className="flex items-center justify-between border-b border-border px-3 py-2">

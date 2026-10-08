@@ -5,24 +5,16 @@ import Search from "@mui/icons-material/Search";
 import { Button } from "@/components/ui/Button";
 import { Chips } from "@/components/ui/Chips";
 import { Input } from "@/components/ui/Input";
+import { TypeSelect } from "@/components/incidents/TypeSelect";
 import { Select } from "@/components/ui/Select";
 import { useSession } from "@/hooks/useSession";
 import { UNASSIGNED, type IncidentFilters, type Range } from "@/lib/domain/filters";
-import {
-  GROUP_LABEL,
-  INCIDENT_TYPES,
-  SEVERITIES,
-  SEVERITY_LABEL,
-  STATUS_GROUPS,
-  TYPE_LABEL,
-} from "@/lib/domain/incident";
-import type { IncidentType } from "@/types/domain";
+import { GROUP_LABEL, SEVERITY_OPTIONS, STATUS_GROUPS } from "@/lib/domain/incident";
 
 const QUERY_DEBOUNCE_MS = 250;
 
 const RANGE_LABEL: Record<Range, string> = { "24h": "Last 24 hours", "7d": "Last 7 days", "30d": "Last 30 days" };
 
-const SEVERITY_OPTIONS = SEVERITIES.map((s) => ({ value: s, label: SEVERITY_LABEL[s] }));
 const STATUS_OPTIONS = STATUS_GROUPS.map((g) => ({ value: g, label: GROUP_LABEL[g] }));
 
 interface IncidentFilterBarProps {
@@ -89,18 +81,7 @@ export function IncidentFilterBar({ filters, onChange, onClear, isFiltered, show
             trailing={<Search fontSize="small" className="mr-2 text-muted" />}
           />
         </div>
-        <Select
-          label="Type"
-          value={filters.type ?? ""}
-          onChange={(e) => onChange({ type: (e.target.value || null) as IncidentType | null })}
-        >
-          <option value="">All types</option>
-          {INCIDENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {TYPE_LABEL[t]}
-            </option>
-          ))}
-        </Select>
+        <TypeSelect value={filters.type} onChange={(type) => onChange({ type })} allLabel="All types" />
         <Select
           label="Reported"
           value={filters.range ?? ""}

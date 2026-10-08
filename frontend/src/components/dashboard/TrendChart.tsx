@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartLegend } from "@/components/dashboard/ChartLegend";
 import { ChartTooltip } from "@/components/dashboard/ChartTooltip";
@@ -12,7 +13,10 @@ const CRITICAL = "var(--critical)";
 
 // Total and critical incidents per day on one count axis.
 export function TrendChart({ buckets }: { buckets: readonly DayBucket[] }) {
-  const data = buckets.map((b) => ({ label: dayLabel.format(b.day), total: b.total, critical: b.bySeverity.CRITICAL }));
+  const data = useMemo(
+    () => buckets.map((b) => ({ label: dayLabel.format(b.day), total: b.total, critical: b.bySeverity.CRITICAL })),
+    [buckets],
+  );
   const dot = (stroke: string) => ({ r: 4, fill: stroke, stroke: "var(--panel)", strokeWidth: 2 });
   return (
     <>

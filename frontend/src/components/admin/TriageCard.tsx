@@ -1,10 +1,12 @@
 import Link from "next/link";
 import MoreVert from "@mui/icons-material/MoreVert";
-import { TriageSla } from "@/components/admin/TriageSla";
+import { SlaTimer } from "@/components/admin/SlaTimer";
 import { Avatar } from "@/components/ui/Avatar";
 import { RiskMeter } from "@/components/ui/RiskMeter";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { cn } from "@/lib/cn";
+import { isOpen } from "@/lib/domain/incident";
+import { msUntilBreach } from "@/lib/domain/stats";
 import type { Incident } from "@/types/domain";
 
 interface TriageCardProps {
@@ -72,7 +74,7 @@ export function TriageCard({
         ) : (
           <span className="text-xs text-muted">Unassigned</span>
         )}
-        <TriageSla incident={incident} now={now} />
+        {isOpen(incident) && <SlaTimer left={msUntilBreach(incident, now)} severity={incident.severity} />}
       </div>
     </article>
   );

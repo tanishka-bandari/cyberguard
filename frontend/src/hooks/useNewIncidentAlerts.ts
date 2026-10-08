@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useIncidents } from "@/hooks/useIncidents";
 import { useSession } from "@/hooks/useSession";
+import { isStaff } from "@/lib/auth/permissions";
 import { toast } from "@/lib/toast";
 import type { Incident } from "@/types/domain";
 
@@ -13,10 +14,10 @@ export function useNewIncidentAlerts() {
   const { data } = useIncidents();
   const seen = useRef<Set<number> | null>(null);
   const [critical, setCritical] = useState<Incident | null>(null);
-  const isStaff = user?.role === "ANALYST" || user?.role === "ADMIN";
+  const staff = !!user && isStaff(user);
 
   useEffect(() => {
-    if (!data || !isStaff) return;
+    if (!data || !staff) return;
     if (seen.current === null) {
       seen.current = new Set(data.map((i) => i.id)); // first load is the baseline
       return;
@@ -27,7 +28,7 @@ export function useNewIncidentAlerts() {
     for (const incident of fresh) toast.info(`New incident #${incident.id}: ${incident.title}`);
     const urgent = fresh.find((i) => i.severity === "CRITICAL");
     if (urgent) setCritical(urgent);
-  }, [data, isStaff, user?.id]);
+  }, [data, staff, user?.id]);
 
   return { critical, dismiss: () => setCritical(null) };
 }
