@@ -40,8 +40,8 @@ Parameters marked "form" are `application/x-www-form-urlencoded` (or query strin
 
 | Method | Path | Params | Roles | Response |
 |--------|------|--------|-------|----------|
-| POST | `/api/auth/register` | form: `name` (2-100 chars), `email` (valid), `password` (8+ chars) | public | `User` (role is always USER) |
-| POST | `/api/auth/login` | JSON: `email`, `password` | public | `LoginResponse` |
+| POST | `/api/auth/register` | form: `name` (2-100 chars), `email` (valid), `password` (8+ chars) | public | `User` (role is always USER); the email is stored trimmed and lowercased, 409 if it is already registered in any letter case |
+| POST | `/api/auth/login` | JSON: `email` (case-insensitive), `password` | public | `LoginResponse` |
 
 ### Incidents
 
@@ -50,9 +50,9 @@ Parameters marked "form" are `application/x-www-form-urlencoded` (or query strin
 | GET | `/api/incidents` | none | any; USER sees own only, staff sees all | `Incident[]` |
 | GET | `/api/incidents/user/{userId}` | path | staff | `Incident[]` |
 | POST | `/api/incidents` | form: `title` (1-200), `description` (1-2000), `type`, `severity`, `riskScore` (0-100) | any | `Incident` |
-| PUT | `/api/incidents/{id}/status` | form: `status` | staff | `Incident` |
-| PUT | `/api/incidents/{id}/assign` | form: `userId` (must be ANALYST or ADMIN); sets status to UNDER_INVESTIGATION; 400 if the incident is RESOLVED or CLOSED (reopen it first) | ADMIN | `Incident` |
-| PUT | `/api/incidents/{id}/unassign` | none; UNDER_INVESTIGATION returns to REPORTED | ADMIN | `Incident` |
+| PUT | `/api/incidents/{id}/status` | form: `status`; 400 "Assign the incident before moving it to ..." when moving an unassigned incident to ASSIGNED, UNDER_INVESTIGATION or CONTAINED | staff | `Incident` |
+| PUT | `/api/incidents/{id}/assign` | form: `userId` (must be ANALYST or ADMIN); moves REPORTED, TRIAGED or ASSIGNED to UNDER_INVESTIGATION and leaves other statuses (for example CONTAINED) unchanged; 400 if the incident is RESOLVED or CLOSED (reopen it first) | ADMIN | `Incident` |
+| PUT | `/api/incidents/{id}/unassign` | none; ASSIGNED, UNDER_INVESTIGATION and CONTAINED return to REPORTED, other statuses are unchanged | ADMIN | `Incident` |
 | DELETE | `/api/incidents/{id}` | none; also removes its notes, evidence (rows and files) and audit entries | ADMIN | 204, no body |
 
 ### Notes
@@ -78,7 +78,7 @@ in the database only.
 
 | Method | Path | Params | Roles | Response |
 |--------|------|--------|-------|----------|
-| GET | `/api/audit-logs/incident/{id}` | none | staff or reporter | `AuditLog[]` (oldest first) |
+| GET | `/api/audit-logs/incident/{id}` | none | staff or reporter | `AuditLog[]` (oldest first); a reporter only gets `INCIDENT_CREATED`, `STATUS_CHANGED`, `INCIDENT_ASSIGNED` and `INCIDENT_UNASSIGNED` entries, with `userEmail` set to null |
 | GET | `/api/audit-logs/recent` | query: `limit` (default 50, clamped to 1-200) | staff | `AuditLog[]` (newest first) |
 
 Entries are written by the server; there is no endpoint to create them. Actions:

@@ -2,12 +2,14 @@ package com.cyberguard.cyberincident.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cyberguard.cyberincident.dto.AuditLogResponseDto;
 import com.cyberguard.cyberincident.model.AuditLog;
 import com.cyberguard.cyberincident.model.Incident;
 import com.cyberguard.cyberincident.model.User;
@@ -17,6 +19,10 @@ import com.cyberguard.cyberincident.repository.AuditLogRepository;
 public class AuditLogService {
 
     private static final int MAX_DETAILS_LENGTH = 255;
+
+    private static final Set<String> REPORTER_VISIBLE = Set.of(
+            "INCIDENT_CREATED", "STATUS_CHANGED",
+            "INCIDENT_ASSIGNED", "INCIDENT_UNASSIGNED");
 
     private final AuditLogRepository auditLogRepository;
     private final AccessControl access;
@@ -46,13 +52,19 @@ public class AuditLogService {
     }
 
     @Transactional(readOnly = true)
-    public List<AuditLog> getLogsByIncident(
+    public List<AuditLogResponseDto> getLogsByIncident(
             Long incidentId, Authentication authentication) {
 
         User user = access.currentUser(authentication);
         access.requireStaffOrReporter(user, access.findIncident(incidentId));
 
-        return auditLogRepository.findByIncidentIdOrderByIdAsc(incidentId);
+        boolean staff = AccessControl.isStaff(user);
+
+        // A reporter only sees status and assignment changes, without who made them.
+        return auditLogRepository.findByIncidentIdOrderByIdAsc(incidentId).stream()
+                .filter(entry -> staff || REPORTER_VISIBLE.contains(entry.getAction()))
+                .map(entry -> AuditLogResponseDto.from(entry, staff))
+                .toList();
     }
 
     @Transactional(readOnly = true)

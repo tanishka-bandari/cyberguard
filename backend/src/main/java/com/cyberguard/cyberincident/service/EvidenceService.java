@@ -19,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -78,25 +80,31 @@ public class EvidenceService {
                 UUID.randomUUID() + extensionOf(originalName));
         Files.write(filePath, data);
 
-        Evidence evidence = new Evidence();
+        try {
+            Evidence evidence = new Evidence();
 
-        evidence.setFileName(originalName);
-        evidence.setFileType(file.getContentType() != null
-                ? file.getContentType()
-                : "application/octet-stream");
-        evidence.setFileSize(file.getSize());
-        evidence.setSha256Hash(sha256(data));
-        evidence.setFilePath(filePath.toString());
-        evidence.setIncident(incident);
-        evidence.setUploadedBy(user);
-        evidence.setUploadedAt(LocalDateTime.now());
+            evidence.setFileName(originalName);
+            evidence.setFileType(file.getContentType() != null
+                    ? file.getContentType()
+                    : "application/octet-stream");
+            evidence.setFileSize(file.getSize());
+            evidence.setSha256Hash(sha256(data));
+            evidence.setFilePath(filePath.toString());
+            evidence.setIncident(incident);
+            evidence.setUploadedBy(user);
+            evidence.setUploadedAt(LocalDateTime.now());
 
-        evidence = evidenceRepository.save(evidence);
+            evidence = evidenceRepository.save(evidence);
 
-        auditLogService.log(user, incident, "EVIDENCE_UPLOADED",
-                "Uploaded " + originalName);
+            auditLogService.log(user, incident, "EVIDENCE_UPLOADED",
+                    "Uploaded " + originalName);
 
-        return evidence;
+            return evidence;
+        } catch (RuntimeException e) {
+            // The transaction rolls back, so the file would be orphaned.
+            deleteQuietly(filePath);
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -125,19 +133,33 @@ public class EvidenceService {
                         HttpStatus.NOT_FOUND, "Evidence not found"));
     }
 
-    /** Removes the evidence rows and their files for a deleted incident. */
+    /**
+     * Removes the evidence rows now and their files once the surrounding
+     * transaction commits, so a rollback never leaves rows without files.
+     */
     public void deleteByIncident(Long incidentId) {
 
         List<Evidence> items = evidenceRepository.findByIncidentId(incidentId);
+        List<Path> files = items.stream()
+                .map(item -> Paths.get(item.getFilePath()))
+                .toList();
 
         evidenceRepository.deleteAll(items);
 
-        for (Evidence item : items) {
-            try {
-                Files.deleteIfExists(Paths.get(item.getFilePath()));
-            } catch (IOException e) {
-                log.warn("Could not delete evidence file {}", item.getFilePath(), e);
-            }
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        files.forEach(EvidenceService::deleteQuietly);
+                    }
+                });
+    }
+
+    private static void deleteQuietly(Path file) {
+        try {
+            Files.deleteIfExists(file);
+        } catch (IOException e) {
+            log.warn("Could not delete evidence file {}", file, e);
         }
     }
 

@@ -2,8 +2,10 @@ package com.cyberguard.cyberincident.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,7 +40,7 @@ public class UserService {
     public User registerUser(String name, String email, String password) {
 
         String cleanName = name == null ? "" : name.trim();
-        String cleanEmail = email == null ? "" : email.trim();
+        String cleanEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
 
         if (cleanName.length() < 2 || cleanName.length() > 100) {
             throw badRequest("Name must be 2 to 100 characters");
@@ -53,9 +55,8 @@ public class UserService {
             throw badRequest("Password must be at least 8 characters");
         }
 
-        if (userRepository.existsByEmail(cleanEmail)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Email already registered");
+        if (userRepository.existsByEmailIgnoreCase(cleanEmail)) {
+            throw emailTaken();
         }
 
         User user = new User();
@@ -65,7 +66,12 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(Role.USER);
 
-        return userRepository.save(user);
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            // Two simultaneous registrations passed the check above.
+            throw emailTaken();
+        }
     }
 
     public User loginUser(String email, String password) {
@@ -74,7 +80,7 @@ public class UserService {
             throw badRequest("Email and password are required");
         }
 
-        User user = userRepository.findByEmail(email.trim())
+        User user = userRepository.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(UserService::invalidCredentials);
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -123,6 +129,11 @@ public class UserService {
 
     private static ResponseStatusException badRequest(String message) {
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+    }
+
+    private static ResponseStatusException emailTaken() {
+        return new ResponseStatusException(
+                HttpStatus.CONFLICT, "Email already registered");
     }
 
     private static ResponseStatusException invalidCredentials() {

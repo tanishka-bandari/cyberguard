@@ -1,8 +1,10 @@
 package com.cyberguard.cyberincident;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -23,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import com.cyberguard.cyberincident.model.Role;
 import com.cyberguard.cyberincident.model.User;
@@ -194,6 +197,74 @@ class IncidentLifecycleTest {
     }
 
     @Test
+    void statusAndAssigneeStayConsistent() throws Exception {
+        Account reporter = createAccount(Role.USER);
+        Account analyst = createAccount(Role.ANALYST);
+        Account admin = createAccount(Role.ADMIN);
+        long id = createIncident(reporter, "Credential stuffing");
+
+        for (String status : new String[] {"ASSIGNED", "UNDER_INVESTIGATION", "CONTAINED"}) {
+            mockMvc.perform(put("/api/incidents/{id}/status", id)
+                            .param("status", status)
+                            .header("Authorization", analyst.bearer()))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message")
+                            .value("Assign the incident before moving it to " + status));
+        }
+
+        assign(id, analyst, admin).andExpect(jsonPath("$.status").value("UNDER_INVESTIGATION"));
+
+        setStatus(id, "CONTAINED", analyst).andExpect(status().isOk());
+
+        // Assigning someone else must not drag a contained incident backwards.
+        assign(id, admin, admin).andExpect(jsonPath("$.status").value("CONTAINED"));
+
+        mockMvc.perform(put("/api/incidents/{id}/unassign", id)
+                        .header("Authorization", admin.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignedToId").doesNotExist())
+                .andExpect(jsonPath("$.status").value("REPORTED"));
+
+        setStatus(id, "RESOLVED", analyst).andExpect(status().isOk());
+        mockMvc.perform(put("/api/incidents/{id}/unassign", id)
+                        .header("Authorization", admin.bearer()))
+                .andExpect(jsonPath("$.status").value("RESOLVED"));
+    }
+
+    @Test
+    void reporterSeesOnlyStatusAndAssignmentEntriesWithoutEmails() throws Exception {
+        Account reporter = createAccount(Role.USER);
+        Account analyst = createAccount(Role.ANALYST);
+        Account admin = createAccount(Role.ADMIN);
+        long id = createIncident(reporter, "Shared drive exposed");
+
+        assign(id, analyst, admin);
+        mockMvc.perform(post("/api/incidents/{id}/notes", id)
+                        .param("content", "Internal detail")
+                        .header("Authorization", analyst.bearer()))
+                .andExpect(status().isOk());
+        mockMvc.perform(multipart("/api/incidents/{id}/evidence", id)
+                        .file(new MockMultipartFile("file", "a.log", "text/plain", "x".getBytes()))
+                        .header("Authorization", analyst.bearer()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/audit-logs/incident/{id}", id)
+                        .header("Authorization", reporter.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].action").value("INCIDENT_CREATED"))
+                .andExpect(jsonPath("$[1].action").value("INCIDENT_ASSIGNED"))
+                .andExpect(jsonPath("$[*].userEmail", everyItem(nullValue())));
+
+        mockMvc.perform(get("/api/audit-logs/incident/{id}", id)
+                        .header("Authorization", analyst.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(4)))
+                .andExpect(jsonPath("$[*].action", hasItem("EVIDENCE_UPLOADED")))
+                .andExpect(jsonPath("$[0].userEmail").isNotEmpty());
+    }
+
+    @Test
     void evidenceUploadDownloadAndAccess() throws Exception {
         Account reporter = createAccount(Role.USER);
         Account stranger = createAccount(Role.USER);
@@ -290,6 +361,19 @@ class IncidentLifecycleTest {
                         .param("role", "USER")
                         .header("Authorization", admin.bearer()))
                 .andExpect(status().isBadRequest());
+    }
+
+    private ResultActions assign(long incidentId, Account assignee, Account admin) throws Exception {
+        return mockMvc.perform(put("/api/incidents/{id}/assign", incidentId)
+                        .param("userId", String.valueOf(assignee.id))
+                        .header("Authorization", admin.bearer()))
+                .andExpect(status().isOk());
+    }
+
+    private ResultActions setStatus(long incidentId, String status, Account staff) throws Exception {
+        return mockMvc.perform(put("/api/incidents/{id}/status", incidentId)
+                .param("status", status)
+                .header("Authorization", staff.bearer()));
     }
 
     private long createIncident(Account reporter, String title) throws Exception {

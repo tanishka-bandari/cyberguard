@@ -1,7 +1,9 @@
 package com.cyberguard.cyberincident.service;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,17 @@ public class IncidentService {
 
     private static final int MAX_TITLE_LENGTH = 200;
     private static final int MAX_DESCRIPTION_LENGTH = 2000;
+
+    // Statuses that mean someone is working on the incident.
+    private static final Set<IncidentStatus> NEEDS_ASSIGNEE = EnumSet.of(
+            IncidentStatus.ASSIGNED,
+            IncidentStatus.UNDER_INVESTIGATION,
+            IncidentStatus.CONTAINED);
+
+    private static final Set<IncidentStatus> STARTS_INVESTIGATION_ON_ASSIGN = EnumSet.of(
+            IncidentStatus.REPORTED,
+            IncidentStatus.TRIAGED,
+            IncidentStatus.ASSIGNED);
 
     private final IncidentRepository incidentRepository;
     private final UserRepository userRepository;
@@ -124,6 +137,12 @@ public class IncidentService {
         IncidentStatus newStatus =
                 Enums.parse(IncidentStatus.class, status, "status");
 
+        if (incident.getAssignedTo() == null && NEEDS_ASSIGNEE.contains(newStatus)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Assign the incident before moving it to " + newStatus);
+        }
+
         IncidentStatus oldStatus = incident.getStatus();
         incident.setStatus(newStatus);
         incident = incidentRepository.save(incident);
@@ -160,7 +179,9 @@ public class IncidentService {
         }
 
         incident.setAssignedTo(assignee);
-        incident.setStatus(IncidentStatus.UNDER_INVESTIGATION);
+        if (STARTS_INVESTIGATION_ON_ASSIGN.contains(incident.getStatus())) {
+            incident.setStatus(IncidentStatus.UNDER_INVESTIGATION);
+        }
         incident = incidentRepository.save(incident);
 
         auditLogService.log(actor, incident, "INCIDENT_ASSIGNED",
@@ -179,7 +200,7 @@ public class IncidentService {
         User previous = incident.getAssignedTo();
         incident.setAssignedTo(null);
 
-        if (incident.getStatus() == IncidentStatus.UNDER_INVESTIGATION) {
+        if (NEEDS_ASSIGNEE.contains(incident.getStatus())) {
             incident.setStatus(IncidentStatus.REPORTED);
         }
 

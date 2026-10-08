@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cyberguard.cyberincident.dto.AuditLogResponseDto;
-import com.cyberguard.cyberincident.model.AuditLog;
 import com.cyberguard.cyberincident.service.AuditLogService;
 
 @RestController
@@ -30,10 +29,7 @@ public class AuditLogController {
             Authentication authentication) {
 
         return ResponseEntity.ok(
-                auditLogService.getLogsByIncident(incidentId, authentication)
-                        .stream()
-                        .map(AuditLogController::toDto)
-                        .toList());
+                auditLogService.getLogsByIncident(incidentId, authentication));
     }
 
     @GetMapping("/recent")
@@ -44,23 +40,7 @@ public class AuditLogController {
         return ResponseEntity.ok(
                 auditLogService.getRecentLogs(limit, authentication)
                         .stream()
-                        .map(AuditLogController::toDto)
+                        .map(log -> AuditLogResponseDto.from(log, true))
                         .toList());
-    }
-
-    private static AuditLogResponseDto toDto(AuditLog log) {
-
-        return new AuditLogResponseDto(
-                log.getId(),
-                log.getAction(),
-                log.getDetails(),
-                log.getUser().getId(),
-                log.getUser().getName(),
-                log.getUser().getEmail(),
-                log.getIncident() != null
-                        ? log.getIncident().getId()
-                        : null,
-                log.getCreatedAt()
-        );
     }
 }

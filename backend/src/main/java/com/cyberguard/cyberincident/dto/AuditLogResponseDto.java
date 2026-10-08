@@ -2,6 +2,8 @@ package com.cyberguard.cyberincident.dto;
 
 import java.time.LocalDateTime;
 
+import com.cyberguard.cyberincident.model.AuditLog;
+
 public class AuditLogResponseDto {
 
     private Long id;
@@ -34,6 +36,22 @@ public class AuditLogResponseDto {
         this.userEmail = userEmail;
         this.incidentId = incidentId;
         this.createdAt = createdAt;
+    }
+
+    public static AuditLogResponseDto from(AuditLog log, boolean includeEmail) {
+
+        return new AuditLogResponseDto(
+                log.getId(),
+                log.getAction(),
+                log.getDetails(),
+                log.getUser().getId(),
+                log.getUser().getName(),
+                includeEmail ? log.getUser().getEmail() : null,
+                log.getIncident() != null
+                        ? log.getIncident().getId()
+                        : null,
+                log.getCreatedAt()
+        );
     }
 
     public Long getId() {

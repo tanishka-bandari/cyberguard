@@ -59,6 +59,19 @@ class AuthControllerTest {
     }
 
     @Test
+    void emailsAreCaseInsensitive() throws Exception {
+        String local = "Bob-" + UUID.randomUUID();
+
+        register(" " + local + "@X.test ").andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(local.toLowerCase() + "@x.test"));
+
+        register(local.toLowerCase() + "@x.test").andExpect(status().isConflict());
+
+        login(local + "@x.TEST", PASSWORD).andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(local.toLowerCase() + "@x.test"));
+    }
+
+    @Test
     void invalidRegistrationIsBadRequest() throws Exception {
         mockMvc.perform(post("/api/auth/register")
                         .param("name", "A")
