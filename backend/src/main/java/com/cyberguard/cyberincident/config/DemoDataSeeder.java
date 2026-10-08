@@ -38,7 +38,7 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     private void seed(String name, String email, Role role) {
 
-        if (userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             return;
         }
 

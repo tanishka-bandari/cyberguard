@@ -15,14 +15,14 @@ class JwtServiceTest {
 
     @Test
     void tokenRoundTripReturnsEmail() {
-        String token = jwtService.generateToken("a@example.com", "USER");
+        String token = jwtService.generateToken("a@example.com");
 
         assertThat(jwtService.extractEmail(token)).isEqualTo("a@example.com");
     }
 
     @Test
     void tamperedTokenIsRejected() {
-        String token = jwtService.generateToken("a@example.com", "USER");
+        String token = jwtService.generateToken("a@example.com");
         String tampered = token.substring(0, token.length() - 2)
                 + (token.endsWith("AA") ? "BB" : "AA");
 
@@ -33,7 +33,7 @@ class JwtServiceTest {
     @Test
     void tokenSignedWithAnotherSecretIsRejected() {
         String foreign = new JwtService("another-secret-that-is-long-enough-456")
-                .generateToken("a@example.com", "ADMIN");
+                .generateToken("a@example.com");
 
         assertThatThrownBy(() -> jwtService.extractEmail(foreign))
                 .isInstanceOf(JwtException.class);

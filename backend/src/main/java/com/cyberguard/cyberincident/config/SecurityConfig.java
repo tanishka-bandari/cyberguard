@@ -100,9 +100,6 @@ public class SecurityConfig {
 
                     auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
 
-                    auth.requestMatchers(HttpMethod.GET, "/api/incidents/user/**")
-                            .hasAnyRole("ANALYST", "ADMIN");
-
                     auth.requestMatchers(HttpMethod.PUT, "/api/incidents/*/status")
                             .hasAnyRole("ANALYST", "ADMIN");
 
@@ -117,7 +114,7 @@ public class SecurityConfig {
                     auth.requestMatchers(HttpMethod.POST, "/api/incidents/*/notes")
                             .hasAnyRole("ANALYST", "ADMIN");
 
-                    auth.requestMatchers("/api/dashboard", "/api/audit-logs/recent")
+                    auth.requestMatchers("/api/audit-logs/recent")
                             .hasAnyRole("ANALYST", "ADMIN");
 
                     auth.requestMatchers(HttpMethod.GET, "/api/users/staff")

@@ -42,13 +42,8 @@ public class EvidenceController {
             @RequestParam("file") MultipartFile file,
             Authentication authentication) throws IOException {
 
-        Evidence evidence = evidenceService.uploadEvidence(
-                incidentId,
-                file,
-                authentication
-        );
-
-        return ResponseEntity.ok(toDto(evidence));
+        return ResponseEntity.ok(EvidenceResponseDto.from(
+                evidenceService.uploadEvidence(incidentId, file, authentication)));
     }
 
     @GetMapping("/{incidentId}/evidence")
@@ -59,7 +54,7 @@ public class EvidenceController {
         List<EvidenceResponseDto> evidenceList =
                 evidenceService.getEvidenceByIncident(incidentId, authentication)
                         .stream()
-                        .map(EvidenceController::toDto)
+                        .map(EvidenceResponseDto::from)
                         .toList();
 
         return ResponseEntity.ok(evidenceList);
@@ -104,20 +99,5 @@ public class EvidenceController {
         } catch (InvalidMediaTypeException e) {
             return MediaType.APPLICATION_OCTET_STREAM;
         }
-    }
-
-    private static EvidenceResponseDto toDto(Evidence evidence) {
-
-        return new EvidenceResponseDto(
-                evidence.getId(),
-                evidence.getFileName(),
-                evidence.getFileType(),
-                evidence.getFileSize(),
-                evidence.getSha256Hash(),
-                evidence.getIncident().getId(),
-                evidence.getUploadedBy().getId(),
-                evidence.getUploadedBy().getName(),
-                evidence.getUploadedAt()
-        );
     }
 }

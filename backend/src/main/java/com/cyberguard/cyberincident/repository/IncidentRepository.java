@@ -1,20 +1,19 @@
 package com.cyberguard.cyberincident.repository;
 
-import com.cyberguard.cyberincident.model.Incident;
-import com.cyberguard.cyberincident.model.IncidentStatus;
-import com.cyberguard.cyberincident.model.Severity;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import com.cyberguard.cyberincident.model.Incident;
 
 public interface IncidentRepository extends JpaRepository<Incident, Long> {
 
+    // Load both users in the same query instead of one query per row.
+    @Override
+    @EntityGraph(attributePaths = {"reportedBy", "assignedTo"})
+    List<Incident> findAll();
+
+    @EntityGraph(attributePaths = {"reportedBy", "assignedTo"})
     List<Incident> findByReportedById(Long userId);
-
-    List<Incident> findByStatus(IncidentStatus status);
-
-    long countByStatus(IncidentStatus status);
-
-    long countBySeverity(Severity severity);
 }
-

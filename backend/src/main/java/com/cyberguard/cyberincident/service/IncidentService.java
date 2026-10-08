@@ -1,5 +1,13 @@
 package com.cyberguard.cyberincident.service;
 
+import static com.cyberguard.cyberincident.service.AuditActions.INCIDENT_ASSIGNED;
+import static com.cyberguard.cyberincident.service.AuditActions.INCIDENT_CREATED;
+import static com.cyberguard.cyberincident.service.AuditActions.INCIDENT_DELETED;
+import static com.cyberguard.cyberincident.service.AuditActions.INCIDENT_UNASSIGNED;
+import static com.cyberguard.cyberincident.service.AuditActions.STATUS_CHANGED;
+import static com.cyberguard.cyberincident.service.Validation.badRequest;
+import static com.cyberguard.cyberincident.service.Validation.requireText;
+
 import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.List;
@@ -61,27 +69,23 @@ public class IncidentService {
         this.access = access;
     }
 
-    // USER can report an incident; the JWT decides who the reporter is.
+    // Any signed-in user can report; the token decides who the reporter is.
     public Incident createIncident(
             String title,
             String description,
             String type,
             String severity,
             Integer riskScore,
-            String email) {
+            Authentication authentication) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED, "User not found"));
+        User user = access.currentUser(authentication);
 
         String cleanTitle = requireText(title, "Title", MAX_TITLE_LENGTH);
         String cleanDescription =
                 requireText(description, "Description", MAX_DESCRIPTION_LENGTH);
 
         if (riskScore == null || riskScore < 0 || riskScore > 100) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Risk score must be between 0 and 100");
+            throw badRequest("Risk score must be between 0 and 100");
         }
 
         Incident incident = new Incident();
@@ -94,11 +98,9 @@ public class IncidentService {
         incident.setStatus(IncidentStatus.REPORTED);
         incident.setReportedBy(user);
         incident.setReportedAt(LocalDateTime.now());
-        incident.setAssignedTo(null);
-
         incident = incidentRepository.save(incident);
 
-        auditLogService.log(user, incident, "INCIDENT_CREATED",
+        auditLogService.log(user, incident, INCIDENT_CREATED,
                 "Reported: " + incident.getTitle());
 
         return incident;
@@ -117,16 +119,6 @@ public class IncidentService {
         return incidentRepository.findByReportedById(user.getId());
     }
 
-    @Transactional(readOnly = true)
-    public List<Incident> getIncidentsByUser(
-            Long userId,
-            Authentication authentication) {
-
-        access.requireStaff(authentication);
-
-        return incidentRepository.findByReportedById(userId);
-    }
-
     public Incident updateStatus(
             Long incidentId,
             String status,
@@ -138,16 +130,14 @@ public class IncidentService {
                 Enums.parse(IncidentStatus.class, status, "status");
 
         if (incident.getAssignedTo() == null && NEEDS_ASSIGNEE.contains(newStatus)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Assign the incident before moving it to " + newStatus);
+            throw badRequest("Assign the incident before moving it to " + newStatus);
         }
 
         IncidentStatus oldStatus = incident.getStatus();
         incident.setStatus(newStatus);
         incident = incidentRepository.save(incident);
 
-        auditLogService.log(actor, incident, "STATUS_CHANGED",
+        auditLogService.log(actor, incident, STATUS_CHANGED,
                 "Status changed from " + oldStatus + " to " + newStatus);
 
         return incident;
@@ -166,16 +156,12 @@ public class IncidentService {
                         HttpStatus.NOT_FOUND, "Assigned user not found"));
 
         if (!AccessControl.isStaff(assignee)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Only ANALYST or ADMIN users can be assigned to incidents");
+            throw badRequest("Only ANALYST or ADMIN users can be assigned to incidents");
         }
 
         if (incident.getStatus() == IncidentStatus.RESOLVED
                 || incident.getStatus() == IncidentStatus.CLOSED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Reopen the incident before assigning it");
+            throw badRequest("Reopen the incident before assigning it");
         }
 
         incident.setAssignedTo(assignee);
@@ -184,7 +170,7 @@ public class IncidentService {
         }
         incident = incidentRepository.save(incident);
 
-        auditLogService.log(actor, incident, "INCIDENT_ASSIGNED",
+        auditLogService.log(actor, incident, INCIDENT_ASSIGNED,
                 "Assigned to " + assignee.getName());
 
         return incident;
@@ -206,7 +192,7 @@ public class IncidentService {
 
         incident = incidentRepository.save(incident);
 
-        auditLogService.log(actor, incident, "INCIDENT_UNASSIGNED",
+        auditLogService.log(actor, incident, INCIDENT_UNASSIGNED,
                 previous != null
                         ? "Unassigned from " + previous.getName()
                         : "Assignment cleared");
@@ -227,27 +213,9 @@ public class IncidentService {
         noteRepository.deleteByIncidentId(incidentId);
         evidenceService.deleteByIncident(incidentId);
 
-        auditLogService.log(actor, null, "INCIDENT_DELETED",
+        auditLogService.log(actor, null, INCIDENT_DELETED,
                 "#" + incidentId + " " + incident.getTitle());
 
         incidentRepository.delete(incident);
-    }
-
-    private static String requireText(String value, String field, int maxLength) {
-
-        if (value == null || value.isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, field + " is required");
-        }
-
-        String text = value.trim();
-
-        if (text.length() > maxLength) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    field + " must be at most " + maxLength + " characters");
-        }
-
-        return text;
     }
 }

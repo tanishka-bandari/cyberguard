@@ -48,7 +48,6 @@ Parameters marked "form" are `application/x-www-form-urlencoded` (or query strin
 | Method | Path | Params | Roles | Response |
 |--------|------|--------|-------|----------|
 | GET | `/api/incidents` | none | any; USER sees own only, staff sees all | `Incident[]` |
-| GET | `/api/incidents/user/{userId}` | path | staff | `Incident[]` |
 | POST | `/api/incidents` | form: `title` (1-200), `description` (1-2000), `type`, `severity`, `riskScore` (0-100) | any | `Incident` |
 | PUT | `/api/incidents/{id}/status` | form: `status`; 400 "Assign the incident before moving it to ..." when moving an unassigned incident to ASSIGNED, UNDER_INVESTIGATION or CONTAINED | staff | `Incident` |
 | PUT | `/api/incidents/{id}/assign` | form: `userId` (must be ANALYST or ADMIN); moves REPORTED, TRIAGED or ASSIGNED to UNDER_INVESTIGATION and leaves other statuses (for example CONTAINED) unchanged; 400 if the incident is RESOLVED or CLOSED (reopen it first) | ADMIN | `Incident` |
@@ -93,12 +92,6 @@ Entries are written by the server; there is no endpoint to create them. Actions:
 | GET | `/api/users/staff` | none | staff | `User[]` (ANALYST and ADMIN only) |
 | GET | `/api/users` | none | ADMIN | `User[]` |
 | PUT | `/api/users/{id}/role` | query or form: `role`; you cannot change your own role | ADMIN | `User` |
-
-### Dashboard
-
-| Method | Path | Params | Roles | Response |
-|--------|------|--------|-------|----------|
-| GET | `/api/dashboard` | none | staff | `{ totalIncidents, reportedIncidents, underInvestigation, resolvedIncidents, criticalIncidents, highSeverityIncidents }` |
 
 ## Response shapes
 

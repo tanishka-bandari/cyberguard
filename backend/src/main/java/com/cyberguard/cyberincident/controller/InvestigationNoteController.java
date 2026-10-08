@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cyberguard.cyberincident.dto.InvestigationNoteResponseDto;
-import com.cyberguard.cyberincident.model.InvestigationNote;
 import com.cyberguard.cyberincident.service.InvestigationNoteService;
 
 @RestController
@@ -33,16 +32,8 @@ public class InvestigationNoteController {
             @RequestParam String content,
             Authentication authentication) {
 
-        InvestigationNote investigationNote =
-                noteService.addNote(
-                        incidentId,
-                        content,
-                        authentication
-                );
-
-        return ResponseEntity.ok(
-                toDto(investigationNote)
-        );
+        return ResponseEntity.ok(InvestigationNoteResponseDto.from(
+                noteService.addNote(incidentId, content, authentication)));
     }
 
     @GetMapping("/{incidentId}/notes")
@@ -53,23 +44,9 @@ public class InvestigationNoteController {
         List<InvestigationNoteResponseDto> notes =
                 noteService.getNotesByIncident(incidentId, authentication)
                         .stream()
-                        .map(InvestigationNoteController::toDto)
+                        .map(InvestigationNoteResponseDto::from)
                         .toList();
 
         return ResponseEntity.ok(notes);
-    }
-
-    private static InvestigationNoteResponseDto toDto(
-            InvestigationNote note) {
-
-        return new InvestigationNoteResponseDto(
-                note.getId(),
-                note.getNote(),
-                note.getIncident().getId(),
-                note.getAddedBy().getId(),
-                note.getAddedBy().getName(),
-                note.getAddedBy().getEmail(),
-                note.getCreatedAt()
-        );
     }
 }

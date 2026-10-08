@@ -33,6 +33,11 @@ public class AccessControl {
                     HttpStatus.UNAUTHORIZED, "Authentication required");
         }
 
+        // Set by JwtAuthenticationFilter; other callers fall back to a lookup.
+        if (authentication.getDetails() instanceof User user) {
+            return user;
+        }
+
         return userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,

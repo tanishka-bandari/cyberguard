@@ -4,42 +4,17 @@ import java.time.LocalDateTime;
 
 import com.cyberguard.cyberincident.model.AuditLog;
 
-public class AuditLogResponseDto {
-
-    private Long id;
-    private String action;
-    private String details;
-    private Long userId;
-    private String userName;
-    private String userEmail;
-    private Long incidentId;
-    private LocalDateTime createdAt;
-
-    public AuditLogResponseDto() {
-    }
-
-    public AuditLogResponseDto(
-            Long id,
-            String action,
-            String details,
-            Long userId,
-            String userName,
-            String userEmail,
-            Long incidentId,
-            LocalDateTime createdAt) {
-
-        this.id = id;
-        this.action = action;
-        this.details = details;
-        this.userId = userId;
-        this.userName = userName;
-        this.userEmail = userEmail;
-        this.incidentId = incidentId;
-        this.createdAt = createdAt;
-    }
+public record AuditLogResponseDto(
+        Long id,
+        String action,
+        String details,
+        Long userId,
+        String userName,
+        String userEmail,
+        Long incidentId,
+        LocalDateTime createdAt) {
 
     public static AuditLogResponseDto from(AuditLog log, boolean includeEmail) {
-
         return new AuditLogResponseDto(
                 log.getId(),
                 log.getAction(),
@@ -47,42 +22,7 @@ public class AuditLogResponseDto {
                 log.getUser().getId(),
                 log.getUser().getName(),
                 includeEmail ? log.getUser().getEmail() : null,
-                log.getIncident() != null
-                        ? log.getIncident().getId()
-                        : null,
-                log.getCreatedAt()
-        );
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public String getDetails() {
-        return details;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public Long getIncidentId() {
-        return incidentId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+                log.getIncident() != null ? log.getIncident().getId() : null,
+                log.getCreatedAt());
     }
 }

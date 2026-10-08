@@ -38,23 +38,11 @@ public class AuthController {
             @RequestBody LoginRequest request) {
 
         User user = userService.loginUser(
-                request.getEmail(),
-                request.getPassword()
+                request.email(),
+                request.password()
         );
 
-        String token = jwtService.generateToken(
-                user.getEmail(),
-                user.getRole().name()
-        );
-
-        LoginResponse response = new LoginResponse(
-                token,
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getRole()
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                LoginResponse.from(user, jwtService.generateToken(user.getEmail())));
     }
 }

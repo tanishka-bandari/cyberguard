@@ -7,10 +7,13 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 
 @Service
 public class JwtService {
+
+    private static final Duration TOKEN_LIFETIME = Duration.ofDays(1);
 
     private final SecretKey key;
 
@@ -28,18 +31,13 @@ public class JwtService {
         );
     }
 
-    public String generateToken(String email, String role) {
+    public String generateToken(String email) {
 
         return Jwts.builder()
                 .subject(email)
-                .claim("role", role)
                 .issuedAt(new Date())
-                .expiration(
-                        new Date(
-                                System.currentTimeMillis()
-                                        + 86400000
-                        )
-                )
+                .expiration(new Date(
+                        System.currentTimeMillis() + TOKEN_LIFETIME.toMillis()))
                 .signWith(key)
                 .compact();
     }

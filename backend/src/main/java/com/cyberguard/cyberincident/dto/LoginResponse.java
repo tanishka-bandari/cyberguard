@@ -1,41 +1,13 @@
 package com.cyberguard.cyberincident.dto;
 
 import com.cyberguard.cyberincident.model.Role;
+import com.cyberguard.cyberincident.model.User;
 
-public class LoginResponse {
+public record LoginResponse(
+        String token, Long id, String name, String email, Role role) {
 
-    private String token;
-    private Long id;
-    private String name;
-    private String email;
-    private Role role;
-
-    public LoginResponse(String token, Long id, String name,
-                         String email, Role role) {
-        this.token = token;
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.role = role;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public Role getRole() {
-        return role;
+    public static LoginResponse from(User user, String token) {
+        return new LoginResponse(
+                token, user.getId(), user.getName(), user.getEmail(), user.getRole());
     }
 }

@@ -1,5 +1,7 @@
 package com.cyberguard.cyberincident.service;
 
+import static com.cyberguard.cyberincident.service.Validation.badRequest;
+
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
@@ -101,9 +103,7 @@ public class UserService {
 
         access.requireStaff(authentication);
 
-        return userRepository.findAll().stream()
-                .filter(AccessControl::isStaff)
-                .toList();
+        return userRepository.findByRoleIn(List.of(Role.ANALYST, Role.ADMIN));
     }
 
     public User changeRole(
@@ -125,10 +125,6 @@ public class UserService {
         target.setRole(newRole);
 
         return userRepository.save(target);
-    }
-
-    private static ResponseStatusException badRequest(String message) {
-        return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
     }
 
     private static ResponseStatusException emailTaken() {

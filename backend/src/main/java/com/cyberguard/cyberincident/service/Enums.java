@@ -2,9 +2,6 @@ package com.cyberguard.cyberincident.service;
 
 import java.util.Arrays;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
 final class Enums {
 
     private Enums() {
@@ -16,10 +13,8 @@ final class Enums {
         try {
             return Enum.valueOf(type, value == null ? "" : value.trim());
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid " + field + ". Allowed values: "
-                            + Arrays.toString(type.getEnumConstants()));
+            throw Validation.badRequest("Invalid " + field + ". Allowed values: "
+                    + Arrays.toString(type.getEnumConstants()));
         }
     }
 }

@@ -41,8 +41,8 @@ Package root: `backend/src/main/java/com/cyberguard/cyberincident`.
 
 | Package | Contents |
 |---|---|
-| `controller` | `AuthController`, `IncidentController`, `InvestigationNoteController`, `EvidenceController`, `AuditLogController`, `UserController`, `DashboardController`. Map HTTP to service calls and entities to DTOs. |
-| `service` | `IncidentService`, `InvestigationNoteService`, `EvidenceService`, `AuditLogService`, `UserService`, `DashboardService`, `JwtService`, `AccessControl`. Business rules and transactions. |
+| `controller` | `AuthController`, `IncidentController`, `InvestigationNoteController`, `EvidenceController`, `AuditLogController`, `UserController`. Map HTTP to service calls and entities to DTOs. |
+| `service` | `IncidentService`, `InvestigationNoteService`, `EvidenceService`, `AuditLogService`, `UserService`, `JwtService`, `AccessControl`. Business rules and transactions. |
 | `repository` | Spring Data JPA interfaces (`IncidentRepository`, `UserRepository`, and so on). |
 | `model` | JPA entities and enums. See [database.md](database.md). |
 | `dto` | Response objects (`IncidentResponseDto`, `LoginResponse`, ...). They are the source of truth for field names in the JSON. |
@@ -82,7 +82,7 @@ Authorization is checked in two places, on purpose:
 1. reads `Authorization: Bearer <token>`,
 2. verifies the signature and expiry with `JwtService` (HMAC key from `JWT_SECRET`, token lifetime 24 hours),
 3. loads the user by the email in the token,
-4. sets the authority from the role stored in the database (not from the role claim in the token).
+4. sets the authority from the role stored in the database (tokens carry no role) and keeps the loaded user in the authentication, so `AccessControl.currentUser` does not query it again.
 
 If the token is missing, malformed or expired, the filter leaves the request unauthenticated and the security rules answer 401. Because the role is read from the database on every request, a role change by an admin takes effect on the server immediately.
 
@@ -232,7 +232,6 @@ What each role can do, as enforced by the backend (`SecurityConfig` plus `Access
 | Register, sign in | yes | yes | yes |
 | Report an incident | yes | yes | yes |
 | List incidents (`GET /api/incidents`) | own only | all | all |
-| List incidents of a given user (`GET /api/incidents/user/{id}`) | no | yes | yes |
 | Change status | no | yes | yes |
 | Assign / unassign | no | no | yes |
 | Delete incident | no | no | yes |
@@ -244,7 +243,6 @@ What each role can do, as enforced by the backend (`SecurityConfig` plus `Access
 | Read recent audit log (all incidents) | no | yes | yes |
 | List staff (`GET /api/users/staff`) | no | yes | yes |
 | List all users, change a role | no | no | yes (not their own role) |
-| `GET /api/dashboard` (counts) | no | yes | yes |
 
 The reporter UI is deliberately limited as well: users have their own portal and cannot open the staff pages. The automated tests that cover these rules are listed in [testing.md](testing.md).
 
@@ -307,7 +305,7 @@ The deadline is `reportedAt + allowed time`. An incident is **breached** when it
 
 **JWT in `localStorage`.** The token is sent in an `Authorization` header, which keeps the backend stateless and needs no CSRF protection. The trade-off is that any script running on the page can read `localStorage`, so a cross-site scripting (XSS) bug would leak the token. Mitigations in place: React escapes rendered text and the code base does not use `dangerouslySetInnerHTML`; `next.config.ts` sets `X-Content-Type-Options`, `Referrer-Policy` and `X-Frame-Options`; tokens expire after 24 hours. There is no Content-Security-Policy header yet. The usual alternative, an httpOnly `SameSite` cookie, protects the token from scripts but brings CSRF concerns and was left out to keep the project small (see future work).
 
-**Client-side aggregation for dashboards.** `GET /api/dashboard` exists and returns six counters, but the UI needs per-day, per-type, per-status and per-staff figures with filters. Because the frontend already holds the full incident list (needed for the tables), `lib/domain/stats.ts` computes everything in the browser. This keeps the backend simple and makes filters instant, and the statistics are plain, easily unit-testable functions. It does not scale to very large incident counts, because every incident is downloaded and every chart is recomputed on the client.
+**Client-side aggregation for dashboards.** There is no backend endpoint for statistics: the UI needs per-day, per-type, per-status and per-staff figures with filters. Because the frontend already holds the full incident list (needed for the tables), `lib/domain/stats.ts` computes everything in the browser. This keeps the backend simple and makes filters instant, and the statistics are plain, easily unit-testable functions. It does not scale to very large incident counts, because every incident is downloaded and every chart is recomputed on the client.
 
 **SWR for server state.** SWR gives caching, de-duplication, revalidation on focus, polling and optimistic updates with very little code, and a shared cache means the list, detail page, triage board and dashboard see the same data. Polling is simpler than WebSockets and sufficient for a few users; the cost is up to 20 seconds of delay for new incidents and repeated requests.
 
@@ -329,4 +327,3 @@ The deadline is `reportedAt + allowed time`. An incident is **breached** when it
 - **SLA is advisory:** computed in the browser only, not stored, not escalated, no resolution timestamp.
 - **Audit log:** rows are removed with their incident; entries are not tamper-evident.
 - **No schema migrations:** see [database.md](database.md).
-- **`GET /api/dashboard` is unused by the UI.** It is kept as a small API example and could be removed or used for a lightweight widget.

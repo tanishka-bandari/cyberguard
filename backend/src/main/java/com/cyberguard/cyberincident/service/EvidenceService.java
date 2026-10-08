@@ -1,5 +1,8 @@
 package com.cyberguard.cyberincident.service;
 
+import static com.cyberguard.cyberincident.service.AuditActions.EVIDENCE_UPLOADED;
+import static com.cyberguard.cyberincident.service.Validation.badRequest;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,8 +69,7 @@ public class EvidenceService {
         access.requireStaffOrReporter(user, incident);
 
         if (file.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "File is empty");
+            throw badRequest("File is empty");
         }
 
         String originalName = cleanFileName(file.getOriginalFilename());
@@ -96,7 +98,7 @@ public class EvidenceService {
 
             evidence = evidenceRepository.save(evidence);
 
-            auditLogService.log(user, incident, "EVIDENCE_UPLOADED",
+            auditLogService.log(user, incident, EVIDENCE_UPLOADED,
                     "Uploaded " + originalName);
 
             return evidence;
