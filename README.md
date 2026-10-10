@@ -57,6 +57,8 @@ docs/       Architecture, database, API reference, deployment, testing and user 
 .github/    CI workflow
 ```
 
+Each application has its own README with setup, configuration and tests: [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md).
+
 ## Quick start
 
 ### Prerequisites
