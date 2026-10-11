@@ -20,7 +20,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-panel-solid px-3 sm:gap-3 sm:px-4">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-panel px-3 sm:gap-3 sm:px-4">
       <button
         type="button"
         aria-label="Open menu"

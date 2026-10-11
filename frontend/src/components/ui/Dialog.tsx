@@ -30,7 +30,7 @@ export function Dialog({ open, onClose, title, children, footer }: DialogProps) 
       aria-labelledby={titleId}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
-      className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-lg border border-border bg-panel-solid p-0 text-fg backdrop:bg-black/60"
+      className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-lg border border-border bg-panel p-0 text-fg backdrop:bg-black/60"
     >
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 id={titleId} className="text-base font-semibold">
