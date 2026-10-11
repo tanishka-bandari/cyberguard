@@ -7,6 +7,8 @@ CyberGuard is a web application for reporting and managing cybersecurity inciden
 
 It is a bachelor's degree project: a Spring Boot REST API with a MySQL database, and a Next.js frontend.
 
+**Live demo:** https://cyberguard-tz1i.vercel.app (the free API host sleeps when idle, so the first load can take up to a minute)
+
 ## Screenshots
 
 <!-- screenshots -->
