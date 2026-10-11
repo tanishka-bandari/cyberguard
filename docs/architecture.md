@@ -8,7 +8,7 @@ Related documents: [API reference](api.md), [database](database.md), [deployment
 
 ![CyberGuard system architecture](architecture-diagram.png)
 
-The diagram shows the deployed setup (Vercel, Render, Supabase) and the CI/CD flow. An editable vector version is in [architecture-diagram.svg](architecture-diagram.svg). The text below describes the same system.
+The diagram shows the deployed setup (Vercel, Render, Supabase) and the CI/CD flow. An editable vector version is in [architecture-diagram.svg](architecture-diagram.svg), and a print-ready one in [architecture-diagram.pdf](architecture-diagram.pdf). The text below describes the same system.
 
 CyberGuard has three runtime parts: a Next.js frontend, a Spring Boot REST API and a MySQL database. The browser only ever talks to the Next.js origin. Next.js forwards every request whose path starts with `/api` to the Spring Boot service (a rewrite configured in `frontend/next.config.ts`), so the browser never makes a cross-origin call.
 
