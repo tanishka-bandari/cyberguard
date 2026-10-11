@@ -8,6 +8,7 @@
 :root {
   --surface: #fcfcfb;
   --panel: #ffffff;
+  --panel-solid: #ffffff;
   --border: #e4e4e0;
   --hover: #f1f1ee;
   --fg: #0b0b0b;
@@ -36,7 +37,8 @@
 
 .dark {
   --surface: #0f1417;
-  --panel: #1a1a19;
+  --panel: rgba(26, 26, 25, 0.84);
+  --panel-solid: #1a1a19;
   --border: #2c2c2a;
   --hover: #262625;
   --fg: #ffffff;
@@ -69,6 +71,7 @@
 
   --color-surface: var(--surface);
   --color-panel: var(--panel);
+  --color-panel-solid: var(--panel-solid);
   --color-border: var(--border);
   --color-hover: var(--hover);
   --color-fg: var(--fg);

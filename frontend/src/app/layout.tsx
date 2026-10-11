@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { Providers } from "@/app/providers";
+import { HauntedBackground } from "@/components/layout/HauntedBackground";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -23,7 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <Providers>{children}</Providers>
+          <Providers>
+            <HauntedBackground />
+            {children}
+          </Providers>
         </AppRouterCacheProvider>
       </body>
     </html>

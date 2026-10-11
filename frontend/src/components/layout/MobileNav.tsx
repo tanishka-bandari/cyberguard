@@ -27,7 +27,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
       aria-label="Navigation menu"
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
-      className="fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-72 max-w-[85vw] border-r border-border bg-panel p-0 text-fg backdrop:bg-black/60 lg:hidden"
+      className="fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-72 max-w-[85vw] border-r border-border bg-panel-solid p-0 text-fg backdrop:bg-black/60 lg:hidden"
     >
       <div className="flex h-full flex-col">
         <div className="flex h-14 items-center justify-between border-b border-border px-5">
