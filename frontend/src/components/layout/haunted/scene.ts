@@ -1,6 +1,6 @@
 // A haunted cyber-security night scene drawn on a 2D canvas: a skull rising over a graveyard of
 // dead servers, binary rain, a network where nodes get infected, glitching terminal messages,
-// ghosts with code in their bodies, intrusion alerts and a lantern that follows the pointer.
+// intrusion alerts and a lantern that follows the pointer.
 // createScene() builds the static skyline once and returns a frame() that draws everything.
 
 export type Pointer = { x: number; y: number; lx: number; ly: number };
@@ -157,62 +157,6 @@ function buildSkyline(w: number, h: number, dpr: number, horizon: number) {
 
 // ---- animated pieces ----
 
-type Ghost = { x: number; y: number; scale: number; speed: number; phase: number; alpha: number; ox: number; oy: number };
-
-function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number, flip: number, alpha: number, phase: number, t: number, fierce = false) {
-  const sway = Math.sin(t * 2 + phase) * 5;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale * flip, scale);
-  glow(ctx, 0, 10, 80, "150,255,215", alpha * 0.5);
-  ctx.globalAlpha = alpha;
-
-  ctx.fillStyle = "rgba(205,255,235,0.9)"; // arms
-  for (const side of [-1, 1]) {
-    ctx.save();
-    ctx.translate(side * 27, 10);
-    ctx.rotate(side * (0.7 + Math.sin(t * 2.4 + phase + side) * 0.35));
-    ctx.beginPath();
-    ctx.ellipse(0, 9, 5, 13, 0, 0, TAU);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  ctx.beginPath();
-  ctx.arc(0, 0, 30, Math.PI, 0);
-  ctx.lineTo(30, 52);
-  const xs = [30, 10, -10, -30];
-  for (let i = 0; i < 3; i++) {
-    ctx.quadraticCurveTo((xs[i] + xs[i + 1]) / 2 + sway, i % 2 === 0 ? 68 : 40, xs[i + 1], 52);
-  }
-  ctx.closePath();
-  const body = ctx.createLinearGradient(0, -30, 0, 66);
-  body.addColorStop(0, "rgba(215,255,240,1)");
-  body.addColorStop(1, "rgba(180,255,220,0.05)");
-  ctx.fillStyle = body;
-  ctx.fill();
-
-  ctx.save(); // code scrolling through the body
-  ctx.clip();
-  ctx.font = "9px monospace";
-  ctx.fillStyle = "rgba(4,50,36,0.5)";
-  for (let row = -28; row < 60; row += 10) {
-    ctx.fillText("0110100110", -34 + ((t * 18 + row * 7) % 20) - 20, row);
-  }
-  ctx.restore();
-
-  ctx.fillStyle = fierce ? "rgba(255,60,50,1)" : "rgba(6,12,14,0.92)";
-  ctx.beginPath();
-  ctx.ellipse(-10, -6, 4.5, 7.5, 0, 0, TAU);
-  ctx.ellipse(10, -6, 4.5, 7.5, 0, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = "rgba(6,12,14,0.92)";
-  ctx.beginPath();
-  ctx.ellipse(0, 15, 6, 8 + Math.sin(t * 1.6 + phase) * 4, 0, 0, TAU);
-  ctx.fill();
-  ctx.restore();
-}
-
 function drawSkull(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, t: number) {
   glow(ctx, x, y, r * 6, "120,255,180", 0.2 + Math.sin(t * 0.5) * 0.05);
   ctx.save();
@@ -284,17 +228,6 @@ export function createScene(w: number, h: number, dpr: number) {
     flip: rand(6, 14),
   }));
   const messages = Array.from({ length: small ? 3 : 6 }, () => ({ text: pick(SNIPPETS), x: rand(0, w * 0.8), y: rand(h * 0.1, h * 0.8), age: rand(0, 6), life: rand(6, 10), phase: rand(0, TAU) }));
-  const ghosts: Ghost[] = Array.from({ length: small ? 3 : 5 }, () => ({
-    x: rand(0, w),
-    y: rand(h * 0.2, h * 0.75),
-    scale: rand(1.1, 2.1),
-    speed: rand(8, 20) * (Math.random() < 0.5 ? -1 : 1),
-    phase: rand(0, TAU),
-    alpha: rand(0.22, 0.4),
-    ox: 0,
-    oy: 0,
-  }));
-  const apparition = { on: false, x: 0, dir: 1, y: 0, age: 0, life: 9, wait: rand(5, 9) };
   const groundFog = Array.from({ length: small ? 6 : 12 }, () => ({
     x: rand(0, w),
     y: rand(horizon - 30, h * 0.97),
@@ -462,42 +395,6 @@ export function createScene(w: number, h: number, dpr: number) {
       if (f.x > w + f.w) f.x = -f.w;
       if (f.x < -f.w) f.x = w + f.w;
       blob(ctx, f.x, f.y, f.w, f.h, "170,255,225", f.a);
-    }
-
-    for (const g of ghosts) {
-      g.x += g.speed * dt;
-      if (g.x > w + 100) g.x = -100;
-      if (g.x < -100) g.x = w + 100;
-      const dx = g.x - pointer.x;
-      const dy = g.y - pointer.y;
-      const d = Math.hypot(dx, dy) || 1;
-      const push = d < 220 ? (1 - d / 220) * 110 : 0;
-      g.ox += ((dx / d) * push - g.ox) * 0.05;
-      g.oy += ((dy / d) * push - g.oy) * 0.05;
-      const fade = 0.65 + 0.35 * Math.sin(t * 0.6 + g.phase);
-      drawGhost(ctx, g.x + g.ox, g.y + g.oy + Math.sin(t * 0.8 + g.phase) * 16, g.scale, g.speed < 0 ? -1 : 1, g.alpha * fade, g.phase, t);
-    }
-
-    // the big apparition that sweeps across the screen now and then
-    if (!apparition.on) {
-      apparition.wait -= dt;
-      if (apparition.wait <= 0) {
-        apparition.on = true;
-        apparition.age = 0;
-        apparition.dir = Math.random() < 0.5 ? 1 : -1;
-        apparition.x = apparition.dir === 1 ? -200 : w + 200;
-        apparition.y = rand(h * 0.3, h * 0.65);
-      }
-    } else {
-      apparition.age += dt;
-      apparition.x += apparition.dir * ((w + 400) / apparition.life) * dt;
-      const k = apparition.age / apparition.life;
-      if (k >= 1) {
-        apparition.on = false;
-        apparition.wait = rand(14, 22);
-      } else {
-        drawGhost(ctx, apparition.x, apparition.y + Math.sin(apparition.age * 1.8) * 50, 4.5, apparition.dir, Math.sin(Math.PI * k) * 0.5, 1, t, true);
-      }
     }
 
     // red alert wash and banner
