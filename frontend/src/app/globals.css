@@ -114,6 +114,33 @@
   }
 }
 
+/* Animated dark-theme backdrop, see CyberBackground. */
+.cyber-bg-grid {
+  background-image:
+    linear-gradient(rgba(63, 212, 156, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63, 212, 156, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.cyber-bg-glow {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(63, 212, 156, 0.1), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(57, 135, 229, 0.08), transparent 40%);
+}
+.cyber-bg-digits {
+  color: rgba(63, 212, 156, 0.09);
+  text-shadow: 0 0 7px rgba(63, 212, 156, 0.15);
+  transform: rotate(2deg);
+  animation: cyber-drift 40s linear infinite alternate;
+}
+@keyframes cyber-drift {
+  from {
+    transform: translateY(-3%) rotate(2deg);
+  }
+  to {
+    transform: translateY(8%) rotate(2deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
