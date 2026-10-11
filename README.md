@@ -50,6 +50,12 @@ Other highlights:
 | Testing | JUnit and MockMvc (backend), Playwright (end to end) |
 | CI/CD and hosting | GitHub Actions; Render (API), Supabase (database), Vercel (frontend) |
 
+## Architecture
+
+![CyberGuard system architecture](docs/architecture-diagram.png)
+
+The browser talks only to the Next.js frontend, which forwards `/api/*` to the Spring Boot API; the API stores data in PostgreSQL (or MySQL locally). Details are in [docs/architecture.md](docs/architecture.md).
+
 ## Repository layout
 
 ```

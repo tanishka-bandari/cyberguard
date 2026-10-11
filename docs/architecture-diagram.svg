@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1810 1000" width="1810" height="1000" font-family="Inter, 'Segoe UI', Arial, sans-serif"><title>CyberGuard system architecture</title><rect width="1810" height="1000" fill="#ffffff"/><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker><marker id="ai" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/></marker><marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d97706"/></marker><marker id="as" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0284c7"/></marker><marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0f172a"/></marker><marker id="ae" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker></defs><text x="30" y="48" font-size="28" font-weight="700" fill="#0f172a" text-anchor="start">CyberGuard: System Architecture</text>
+<text x="30" y="74" font-size="14" font-weight="400" fill="#475569" text-anchor="start">Browser  →  Next.js frontend (Vercel)  →  Spring Boot API (Render)  →  PostgreSQL (Supabase)</text>
+<text x="30" y="118" font-size="11" font-weight="700" fill="#64748b" text-anchor="start">PEOPLE</text>
+<rect x="30" y="130" width="175" height="96" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.2"/>
+<text x="42" y="152" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">User (reporter)</text>
+<text x="42" y="172" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Reports incidents</text>
+<text x="42" y="189" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Tracks own cases</text>
+<text x="42" y="206" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Adds own evidence</text>
+<rect x="30" y="246" width="175" height="96" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.2"/>
+<text x="42" y="268" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Analyst</text>
+<text x="42" y="288" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Investigates incidents</text>
+<text x="42" y="305" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Changes status, adds notes</text>
+<text x="42" y="322" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Reads team workload</text>
+<rect x="30" y="362" width="175" height="96" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.2"/>
+<text x="42" y="384" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Admin</text>
+<text x="42" y="404" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Triage board, assign, delete</text>
+<text x="42" y="421" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Manages user roles</text>
+<text x="42" y="438" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Command center, SLA view</text>
+<rect x="250" y="110" width="200" height="340" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2"/>
+<text x="266" y="138" font-size="17" font-weight="700" fill="#0284c7" text-anchor="start">Client</text>
+<text x="266" y="158" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Web browser</text>
+<rect x="262" y="170" width="176" height="80" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.2"/>
+<text x="274" y="192" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">React 19 UI</text>
+<text x="274" y="212" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Pages and components</text>
+<text x="274" y="229" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Responsive, light / dark</text>
+<rect x="262" y="260" width="176" height="80" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.2"/>
+<text x="274" y="282" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">SWR cache</text>
+<text x="274" y="302" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Polling every 20 / 30 s</text>
+<text x="274" y="319" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Optimistic updates</text>
+<rect x="262" y="350" width="176" height="80" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.2"/>
+<text x="274" y="372" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Session</text>
+<text x="274" y="392" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">JWT in localStorage</text>
+<text x="274" y="409" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Sent as Bearer header</text>
+<rect x="540" y="110" width="340" height="520" rx="14" fill="#f8fafc" stroke="#0f172a" stroke-width="2"/>
+<text x="556" y="138" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">Frontend · Vercel</text>
+<text x="556" y="158" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Next.js 16 · App Router · React 19 · TypeScript</text>
+<rect x="556" y="170" width="308" height="100" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+<text x="568" y="192" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Routes (src/app)</text>
+<text x="568" y="212" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">/login  /register</text>
+<text x="568" y="229" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">/portal  /portal/report  /portal/cases</text>
+<text x="568" y="246" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">/dashboard  /incidents  /team</text>
+<text x="568" y="263" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">/admin/command-center  /triage  /users</text>
+<rect x="556" y="284" width="308" height="84" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+<text x="568" y="306" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">UI layer</text>
+<text x="568" y="326" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">components: ui, layout, auth, incidents,</text>
+<text x="568" y="343" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">portal, dashboard, admin</text>
+<text x="568" y="360" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Tailwind 4 · MUI icons · Recharts</text>
+<rect x="556" y="382" width="308" height="84" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+<text x="568" y="404" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Data and auth layer</text>
+<text x="568" y="424" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">hooks (SWR) → lib/api/client.ts</text>
+<text x="568" y="441" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">lib/auth: route access rules, can()</text>
+<text x="568" y="458" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">lib/domain: SLA, filters, statistics</text>
+<rect x="556" y="480" width="308" height="76" rx="8" fill="#e2e8f0" stroke="#0f172a" stroke-width="1.2"/>
+<text x="568" y="502" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">next.config.ts rewrite</text>
+<text x="568" y="522" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">/api/*  →  BACKEND_URL/api/*</text>
+<text x="568" y="539" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Same origin, so no CORS for the browser</text>
+<rect x="1000" y="110" width="420" height="680" rx="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+<text x="1016" y="138" font-size="17" font-weight="700" fill="#4f46e5" text-anchor="start">API · Render</text>
+<text x="1016" y="158" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Spring Boot 4 · Java 21 · Docker</text>
+<rect x="1016" y="170" width="388" height="92" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="1.2"/>
+<text x="1028" y="192" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Security filter chain</text>
+<text x="1028" y="212" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">JwtAuthenticationFilter verifies the Bearer token</text>
+<text x="1028" y="229" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">SecurityConfig: role rules, 401 / 403 as JSON</text>
+<text x="1028" y="246" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Stateless sessions · BCrypt passwords</text>
+<rect x="1016" y="276" width="388" height="92" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="1.2"/>
+<text x="1028" y="298" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Controllers (REST)</text>
+<text x="1028" y="318" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Auth · Incident · InvestigationNote</text>
+<text x="1028" y="335" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Evidence · AuditLog · User</text>
+<text x="1028" y="352" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Thin: request parameters in, DTOs out</text>
+<rect x="1016" y="382" width="388" height="110" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="1.2"/>
+<text x="1028" y="404" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Services (@Transactional)</text>
+<text x="1028" y="424" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Incident · Note · Evidence · AuditLog · User</text>
+<text x="1028" y="441" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">AccessControl: staff / admin / reporter rules</text>
+<text x="1028" y="458" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">JwtService: HMAC-signed tokens, 24 h</text>
+<text x="1028" y="475" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Validation, status and assignment rules</text>
+<rect x="1016" y="506" width="388" height="76" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="1.2"/>
+<text x="1028" y="528" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Repositories</text>
+<text x="1028" y="548" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Spring Data JPA / Hibernate</text>
+<text x="1028" y="565" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">@EntityGraph on list queries (no N+1)</text>
+<rect x="1016" y="596" width="388" height="96" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.2" stroke-dasharray="6 5"/>
+<text x="1028" y="618" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Evidence files (local disk)</text>
+<text x="1028" y="638" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">UPLOAD_DIR · UUID file names · SHA-256 hash</text>
+<text x="1028" y="655" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Free plan: files are lost on restart or deploy</text>
+<rect x="1016" y="706" width="388" height="64" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="1.2"/>
+<text x="1028" y="728" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">ApiExceptionHandler</text>
+<text x="1028" y="748" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Every error becomes { status, message }</text>
+<path d="M1210,262 L1210,276" fill="none" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#ai)"/>
+<path d="M1210,368 L1210,382" fill="none" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#ai)"/>
+<path d="M1210,492 L1210,506" fill="none" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#ai)"/>
+<path d="M1404,437 L1412,437 L1412,644 L1404,644" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#aa)"/>
+<rect x="1520" y="110" width="270" height="480" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+<text x="1536" y="138" font-size="17" font-weight="700" fill="#16a34a" text-anchor="start">Database · Supabase</text>
+<text x="1536" y="158" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">PostgreSQL (free plan, 500 MB)</text>
+<path d="M1540,186 L1540,264 A115.0,16 0 0 0 1770,264 L1770,186" fill="#ffffff" stroke="#16a34a" stroke-width="1.4"/>
+<ellipse cx="1655.0" cy="186" rx="115.0" ry="16" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+<text x="1655.0" y="232" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">PostgreSQL</text>
+<text x="1655.0" y="252" font-size="11.5" font-weight="400" fill="#334155" text-anchor="middle">Session pooler :5432 · SSL</text>
+<rect x="1536" y="300" width="238" height="140" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+<text x="1548" y="322" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Tables (created by Hibernate)</text>
+<text x="1548" y="342" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">users</text>
+<text x="1548" y="359" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">incidents</text>
+<text x="1548" y="376" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">investigation_notes</text>
+<text x="1548" y="393" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">evidence</text>
+<text x="1548" y="410" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">audit_logs</text>
+<rect x="1536" y="454" width="238" height="110" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+<text x="1548" y="476" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Locked down</text>
+<text x="1548" y="496" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Row-level security on</text>
+<text x="1548" y="513" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">anon / authenticated revoked</text>
+<text x="1548" y="530" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Only the API connects</text>
+<rect x="1520" y="616" width="270" height="86" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.2" stroke-dasharray="6 5"/>
+<text x="1532" y="638" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Local development</text>
+<text x="1532" y="658" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">MySQL 8 (same code, MySQL URL)</text>
+<text x="1532" y="675" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">H2 in memory for backend tests</text>
+<path d="M450,250 L540,250" fill="none" stroke="#0284c7" stroke-width="1.8" marker-end="url(#as)" marker-start="url(#as)"/>
+<rect x="472.5" y="231.0" width="45.0" height="38" rx="5" fill="#ffffff" stroke="#0284c7" stroke-width="0.8"/>
+<text x="495" y="244.0" font-size="11" font-weight="500" fill="#0284c7" text-anchor="middle">pages</text>
+<text x="495" y="259.0" font-size="11" font-weight="500" fill="#0284c7" text-anchor="middle">+ JS</text>
+<path d="M450,330 L540,330" fill="none" stroke="#0284c7" stroke-width="1.8" marker-end="url(#as)" marker-start="url(#as)"/>
+<rect x="469.4" y="311.0" width="51.2" height="38" rx="5" fill="#ffffff" stroke="#0284c7" stroke-width="0.8"/>
+<text x="495" y="324.0" font-size="11" font-weight="500" fill="#0284c7" text-anchor="middle">/api/*</text>
+<text x="495" y="339.0" font-size="11" font-weight="500" fill="#0284c7" text-anchor="middle">+ JWT</text>
+<path d="M205,178 L250,300" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#ag)"/>
+<path d="M205,294 L250,300" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#ag)"/>
+<path d="M205,410 L250,300" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#ag)"/>
+<path d="M864,518 L940,518 L940,216 L1016,216" fill="none" stroke="#0f172a" stroke-width="1.8" marker-end="url(#ad)" marker-start="url(#ad)"/>
+<rect x="911.3" y="351.0" width="57.4" height="38" rx="5" fill="#ffffff" stroke="#0f172a" stroke-width="0.8"/>
+<text x="940" y="364.0" font-size="11" font-weight="500" fill="#0f172a" text-anchor="middle">rewrite</text>
+<text x="940" y="379.0" font-size="11" font-weight="500" fill="#0f172a" text-anchor="middle">HTTPS</text>
+<path d="M1404,544 L1470,544 L1470,230 L1540,230" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#ae)" marker-start="url(#ae)"/>
+<rect x="1450.6" y="381.0" width="38.8" height="38" rx="5" fill="#ffffff" stroke="#16a34a" stroke-width="0.8"/>
+<text x="1470" y="394.0" font-size="11" font-weight="500" fill="#16a34a" text-anchor="middle">JDBC</text>
+<text x="1470" y="409.0" font-size="11" font-weight="500" fill="#16a34a" text-anchor="middle">SSL</text>
+<rect x="30" y="520" width="420" height="118" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.2"/>
+<text x="42" y="542" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Testing</text>
+<text x="42" y="562" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Backend: JUnit + MockMvc on H2 (23 tests)</text>
+<text x="42" y="579" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Frontend: ESLint and TypeScript check (in CI)</text>
+<text x="42" y="596" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">End to end: Playwright (67 tests, run locally)</text>
+<text x="42" y="613" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Own ports 8081 / 3100, never the dev servers</text>
+<text x="30" y="690" font-size="11" font-weight="700" fill="#64748b" text-anchor="start">LEGEND</text>
+<path d="M30,712 L90,712" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="100" y="716" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">request / response</text>
+<path d="M30,736 L90,736" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#aa)"/>
+<text x="100" y="740" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">deploy / ephemeral storage</text>
+<rect x="30" y="752" width="60" height="20" rx="4" fill="#ffffff" stroke="#475569" stroke-width="1.2" stroke-dasharray="6 5"/>
+<text x="100" y="767" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">optional or temporary</text>
+<rect x="540" y="840" width="1250" height="150" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+<text x="556" y="868" font-size="17" font-weight="700" fill="#d97706" text-anchor="start">CI / CD · GitHub</text>
+<text x="556" y="888" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Every push to main</text>
+<rect x="556" y="902" width="230" height="70" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+<text x="568" y="924" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Repository (main)</text>
+<text x="568" y="944" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">frontend/  backend/  docs/</text>
+<text x="568" y="961" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">github.com/tanishka-bandari/cyberguard</text>
+<rect x="836" y="902" width="400" height="70" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+<text x="848" y="924" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">GitHub Actions</text>
+<text x="848" y="944" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">backend: ./mvnw test (H2 database)</text>
+<text x="848" y="961" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">frontend: npm ci, lint, typecheck, build</text>
+<rect x="1290" y="902" width="480" height="70" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+<text x="1302" y="924" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Automatic deploy</text>
+<text x="1302" y="944" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Vercel builds frontend/  ·  Render builds backend/Dockerfile</text>
+<text x="1302" y="961" font-size="11.5" font-weight="400" fill="#334155" text-anchor="start">Secrets live only in the hosting dashboards</text>
+<path d="M786,937 L836,937" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#aa)"/>
+<path d="M1236,937 L1290,937" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#aa)"/>
+<path d="M710,840 L710,634" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#aa)"/>
+<path d="M1210,840 L1210,794" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#aa)"/>
+<rect x="684.4" y="723.5" width="51.2" height="23" rx="5" fill="#ffffff" stroke="#d97706" stroke-width="0.8"/>
+<text x="710" y="736.5" font-size="11" font-weight="500" fill="#d97706" text-anchor="middle">deploy</text>
+<rect x="1184.4" y="806.5" width="51.2" height="23" rx="5" fill="#ffffff" stroke="#d97706" stroke-width="0.8"/>
+<text x="1210" y="819.5" font-size="11" font-weight="500" fill="#d97706" text-anchor="middle">deploy</text></svg>
