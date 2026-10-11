@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { Providers } from "@/app/providers";
-import { HauntedBackground } from "@/components/layout/HauntedBackground";
+import { CyberEyesBackground } from "@/components/layout/CyberEyesBackground";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <Providers>
-            <HauntedBackground />
+            <CyberEyesBackground />
             {children}
           </Providers>
         </AppRouterCacheProvider>

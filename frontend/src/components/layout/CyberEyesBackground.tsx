@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { createScene, type Pointer } from "@/components/layout/haunted/scene";
+import { createScene, type Pointer } from "@/components/layout/eyes/scene";
 
-// Dark-theme backdrop: a haunted graveyard night drawn on a canvas (see haunted/scene.ts).
+// Dark-theme backdrop: watching cyber eyes in binary rain, drawn on a canvas (see eyes/scene.ts).
 // Not drawn in the light theme or while the tab is hidden; one still frame with reduced motion.
-export function HauntedBackground() {
+export function CyberEyesBackground() {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

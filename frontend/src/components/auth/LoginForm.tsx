@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { AccessGranted } from "@/components/auth/AccessGranted";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { useAuthRedirect } from "@/components/auth/useAuthRedirect";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { useSession } from "@/hooks/useSession";
 import { ApiError } from "@/lib/api/client";
 import { login } from "@/lib/api/auth";
+import type { Session } from "@/types/domain";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,6 +23,7 @@ export function LoginForm() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [serverError, setServerError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [granted, setGranted] = useState<Session | null>(null);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,7 +40,7 @@ export function LoginForm() {
 
     setBusy(true);
     try {
-      signIn(await login(email, password));
+      setGranted(await login(email, password));
     } catch (err) {
       const rejected = err instanceof ApiError && [400, 401, 403].includes(err.status);
       setServerError(rejected ? "Invalid email or password." : (err as Error).message);
@@ -72,6 +75,7 @@ export function LoginForm() {
           {busy ? "Signing in" : "Sign in"}
         </Button>
       </form>
+      {granted && <AccessGranted session={granted} onDone={() => signIn(granted)} />}
     </AuthCard>
   );
 }
