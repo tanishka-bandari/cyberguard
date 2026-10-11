@@ -35,7 +35,7 @@ export function Toaster() {
         return (
           <div
             key={t.id}
-            className="pointer-events-auto flex w-full max-w-sm items-start gap-2 rounded-lg border border-border bg-panel p-3 text-sm shadow-lg"
+            className="pointer-events-auto flex w-full max-w-sm items-start gap-2 rounded-lg border border-border bg-panel-solid p-3 text-sm shadow-lg"
           >
             <span className={cn("mt-0.5 text-lg", ACCENT[t.kind])}>
               <Icon fontSize="inherit" />

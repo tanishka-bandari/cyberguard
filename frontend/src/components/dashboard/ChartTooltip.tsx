@@ -4,7 +4,7 @@ import type { TooltipContentProps } from "recharts";
 export function ChartTooltip({ active, payload, label, unit }: TooltipContentProps & { unit?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-border bg-panel px-3 py-2 text-xs shadow-lg">
+    <div className="rounded-md border border-border bg-panel-solid px-3 py-2 text-xs shadow-lg">
       <p className="mb-1 font-medium text-fg">{label}</p>
       <ul className="space-y-0.5">
         {payload.map((row) => (
