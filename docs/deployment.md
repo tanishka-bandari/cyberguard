@@ -176,9 +176,9 @@ Open your site URL and go through this list:
 
 | Behaviour | Why it happens | What to do |
 |---|---|---|
-| The **first request after 15 minutes of silence takes about a minute** (the page may show "cannot reach the server") | Render puts free services to sleep when idle | Wait a minute and try again. Before a demo or presentation, open the site five minutes earlier to wake the API. |
+| The **first request after 15 minutes of silence can take up to 3 minutes** | Render puts free services to sleep when idle | The login page wakes the API as soon as it opens and retries the sign-in by itself, showing "Waking up the server". The scheduled workflow `.github/workflows/keep-alive.yml` also pings the API every 10 minutes to keep it awake. GitHub can delay scheduled runs, so the occasional slow first load is still possible. Before a demo, open the site five minutes earlier. |
 | **Uploaded evidence files disappear** after a restart or a new deploy | Render's free plan has no permanent disk | Fine for a demo. The incident, notes and the file's record in the database stay; only the file itself is lost. A permanent fix needs a paid disk or file storage (for example Supabase Storage), which this project does not implement. |
-| The API stops working at the end of the month | Free Render accounts get 750 instance-hours per month, shared by all free services | One service fits. Do not run several free services at once. |
+| The API stops working at the end of the month | Free Render accounts get 750 instance-hours per month, shared by all free services. A service that never sleeps uses about 744 hours in a 31-day month. | One service fits, but only just. Do not run a second free service, or switch the keep-alive workflow off (Actions tab, "Keep API awake", Disable workflow) if hours run out. |
 | The site stops working after a quiet week | Free Supabase projects can be paused when unused | Open the Supabase dashboard and click **Restore project**. |
 | Large evidence uploads (over a few MB) may fail on the deployed site | Vercel limits the size of requests passing through it. This has not been tested for this project. | Test with a small file first. The API itself accepts up to 10 MB. |
 
@@ -193,7 +193,8 @@ Open your site URL and go through this list:
 | Logs show `The connection attempt failed` or `Network is unreachable` | You used the direct connection host. Use the **Session pooler** host from Step 1. |
 | Logs show `password authentication failed` | Wrong `DB_PASSWORD`, or the user is missing the project reference. The user must look like `postgres.abcdefghijklmnop`. Reset the password in Supabase (Project Settings, Database) if unsure. |
 | Logs show `MaxClientsInSessionMode` or too many connections | Too many connections for the free pooler. Add `DB_POOL_SIZE=3` on Render. |
-| Login says the server cannot be reached | The API is asleep (wait a minute), or `BACKEND_URL` on Vercel is wrong or has a trailing slash. Fix it and **redeploy** the Vercel project. |
+| Login shows "The server is waking up" or an HTML page titled 502 | The API is asleep or still starting. A 502 from the site with the header `X-Render-Routing: no-deploy` is Render's answer while the service wakes. | Wait up to 3 minutes; the login retries by itself. If it never ends, check the Render service status and logs. |
+| Login says the server cannot be reached | You are offline, or `BACKEND_URL` on Vercel is wrong. Use `https://`, no quotes and no leading space, because a malformed value also makes the Vercel build fail with "Invalid rewrite found". Fix it and **redeploy** the Vercel project. |
 | Browser console shows a CORS error, or login fails with 403 | `CORS_ALLOWED_ORIGINS` on Render does not exactly match your Vercel URL (check `https`, spelling, no trailing slash). |
 | You are signed out unexpectedly | Changing `JWT_SECRET` signs everyone out once. This is normal; sign in again. |
 | Everything worked, then every login returns 401 | You changed the `JWT_SECRET`, or the database was reset. Sign in again; register again if the database was recreated. |

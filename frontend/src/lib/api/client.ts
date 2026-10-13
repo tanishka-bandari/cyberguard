@@ -15,6 +15,13 @@ export class ApiError extends Error {
 export const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
+// 502/503/504: the host (for example a free Render service) is asleep or still starting.
+export const isServerWaking = (error: unknown) =>
+  error instanceof ApiError && [502, 503, 504].includes(error.status);
+
+const WAKING_MESSAGE =
+  "The server is waking up. Free hosting sleeps when idle, so this can take up to 3 minutes. Please try again shortly.";
+
 interface ApiConfig {
   getToken: () => string | null;
   onUnauthorized: () => void;
@@ -86,6 +93,7 @@ async function send(method: string, path: string, opts: RequestOptions): Promise
   }
   if (res.ok) return res;
 
+  if ([502, 503, 504].includes(res.status)) throw new ApiError(res.status, WAKING_MESSAGE);
   const message = await readMessage(res);
   if (res.status === 401 && opts.auth !== false) {
     config.onUnauthorized();
@@ -111,4 +119,26 @@ export async function request<T>(
 export async function requestBlob(path: string): Promise<Blob> {
   const res = await send("GET", path, {});
   return res.blob();
+}
+
+// Fire-and-forget request that wakes a sleeping backend while the user types their credentials.
+export function wakeServer() {
+  fetch(`${BASE}/incidents`).catch(() => undefined);
+}
+
+// Repeats an idempotent request while the backend is waking up. onWaiting runs before each pause.
+export async function retryWhileWaking<T>(
+  run: () => Promise<T>,
+  { onWaiting, signal, attempts = 24, delayMs = 10_000 }: { onWaiting: () => void; signal: AbortSignal; attempts?: number; delayMs?: number },
+): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await run();
+    } catch (error) {
+      if (!isServerWaking(error) || attempt >= attempts || signal.aborted) throw error;
+      onWaiting();
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      if (signal.aborted) throw error;
+    }
+  }
 }

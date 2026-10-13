@@ -1,0 +1,25 @@
+name: Keep API awake
+
+# Render's free plan puts the API to sleep after 15 minutes without traffic, and waking it takes
+# minutes. A request every 10 minutes keeps it running. GitHub may delay scheduled runs, so this
+# lowers the chance of a cold start but does not remove it. Set a repository variable API_URL
+# (Settings, Secrets and variables, Actions, Variables) to point at a different API address.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      API_URL: ${{ vars.API_URL || 'https://cyberguard-api-umhh.onrender.com' }}
+    steps:
+      - name: Ping the API
+        # 401 is the expected answer: the API is awake and refuses a request without a login.
+        # The step never fails, so a slow cold start does not send a failure e-mail.
+        run: |
+          code=$(curl -s -o /dev/null -m 120 -w "%{http_code}" "$API_URL/api/incidents" || true)
+          echo "API answered HTTP ${code:-none}"

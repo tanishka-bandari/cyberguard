@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AuthCard } from "@/components/auth/AuthCard";
@@ -9,6 +9,7 @@ import { useAuthRedirect } from "@/components/auth/useAuthRedirect";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useSession } from "@/hooks/useSession";
+import { wakeServer } from "@/lib/api/client";
 import { login, register } from "@/lib/api/auth";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,6 +32,8 @@ export function RegisterForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [serverError, setServerError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(wakeServer, []);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
